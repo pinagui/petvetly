@@ -5,6 +5,11 @@ import { AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import './index.css'
 import App from './App.tsx'
+import { captureUTMs } from './lib/funnelTracking'
+
+// Captura UTMs/fbclid IMEDIATAMENTE (antes de qualquer navegação do SPA),
+// direto da URL de entrada do anúncio.
+captureUTMs()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

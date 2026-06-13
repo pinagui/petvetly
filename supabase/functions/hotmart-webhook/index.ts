@@ -160,6 +160,8 @@ Deno.serve(async (req) => {
           utm_source: (body.utm as any)?.utm_source,
           utm_medium: (body.utm as any)?.utm_medium,
           utm_campaign: (body.utm as any)?.utm_campaign,
+          utm_content: (body.utm as any)?.utm_content,
+          fbclid: (body.utm as any)?.fbclid,
           session_id: (body.utm as any)?.session_id,
           ts: body.ts,
         });

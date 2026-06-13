@@ -74,17 +74,29 @@ export function getUTMs(): UTMData {
   return captureUTMs();
 }
 
-/* ── envio remoto (opcional) ── */
+/* ── envio remoto ──
+   IMPORTANTE: usamos Content-Type "text/plain" de propósito. Ele é
+   CORS-safelisted → NÃO dispara preflight (OPTIONS). Com application/json
+   o navegador exige preflight, que falha silenciosamente no navegador
+   interno do Facebook/Instagram (onde o tráfego pago abre) e o evento
+   nunca chega. O servidor lê o corpo como JSON independente do header. */
 function postRemote(payload: unknown) {
   if (!WEBHOOK_URL) return;
+  const body = JSON.stringify(payload);
+  // fetch com keepalive é o mais confiável (sobrevive à navegação)
   try {
-    const body = JSON.stringify(payload);
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(WEBHOOK_URL, new Blob([body], { type: 'application/json' }));
-    } else {
-      fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
-    }
-  } catch { /* offline */ }
+    fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+      body,
+      keepalive: true,
+      mode: 'cors',
+    }).catch(() => {
+      try { navigator.sendBeacon?.(WEBHOOK_URL, new Blob([body], { type: 'text/plain;charset=UTF-8' })); } catch { /* noop */ }
+    });
+  } catch {
+    try { navigator.sendBeacon?.(WEBHOOK_URL, new Blob([body], { type: 'text/plain;charset=UTF-8' })); } catch { /* noop */ }
+  }
 }
 
 /* ── eventos ── */
