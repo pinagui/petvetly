@@ -12,6 +12,21 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>PetVetly — Veterinário 24h</title>
+    <style>
+      /* Splash instantâneo — pinta antes do JS/CSS carregar (mata a tela branca) */
+      #pv-splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;background:linear-gradient(135deg,#0D9488,#0891B2);
+        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+      #pv-splash .pv-box{width:80px;height:80px;border-radius:22px;background:rgba(255,255,255,.18);
+        display:flex;align-items:center;justify-content:center;font-size:42px;
+        box-shadow:0 10px 40px rgba(0,0,0,.2);animation:pv-pulse 1.2s ease-in-out infinite}
+      #pv-splash .pv-name{color:#fff;font-weight:800;font-size:26px;letter-spacing:-.5px;margin-top:18px}
+      #pv-splash .pv-sub{color:rgba(255,255,255,.8);font-size:13px;margin-top:4px}
+      #pv-splash .pv-spin{margin-top:22px;width:26px;height:26px;border-radius:50%;
+        border:3px solid rgba(255,255,255,.3);border-top-color:#fff;animation:pv-rot .7s linear infinite}
+      @keyframes pv-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+      @keyframes pv-rot{to{transform:rotate(360deg)}}
+    </style>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="preconnect" href="https://connect.facebook.net" />
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
@@ -35,7 +50,14 @@
     <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=2090986854986123&ev=PageView&noscript=1"
     /></noscript>
-    <div id="root"></div>
+    <div id="root">
+      <div id="pv-splash">
+        <div class="pv-box">🐾</div>
+        <div class="pv-name">PetVetly</div>
+        <div class="pv-sub">Carregando…</div>
+        <div class="pv-spin"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

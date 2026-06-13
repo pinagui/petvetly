@@ -6,10 +6,14 @@ import { Sun, Moon } from 'lucide-react';
 import BottomNav from './components/BottomNav';
 import Sidebar from './components/Sidebar';
 
-/* Lazy: cada tela vira um chunk separado. As telas internas do app
-   (Home/Category/Condition/Profile) carregam os 100 arquivos de dados —
-   por isso NÃO podem entrar no bundle inicial de /quiz e / (tráfego pago). */
-const LandingScreen = lazy(() => import('./screens/LandingScreen'));
+/* /quiz e / são as portas de entrada do tráfego pago — carregam DIRETO
+   no bundle inicial (sem cascata de download). Nenhum dos dois importa os
+   100 arquivos de dados, então não pesam o crítico. */
+import LandingScreen from './screens/LandingScreen';
+import QuizFunnelScreen from './screens/QuizFunnelScreen';
+
+/* Telas internas do app carregam os dados pesados → ficam em lazy (chunk
+   separado, só baixa quando o usuário logado navega pra elas). */
 const LoginScreen = lazy(() => import('./screens/LoginScreen'));
 const ThankYouScreen = lazy(() => import('./screens/ThankYouScreen'));
 const OnboardingScreen = lazy(() => import('./screens/OnboardingScreen'));
@@ -17,7 +21,6 @@ const HomeScreen = lazy(() => import('./screens/HomeScreen'));
 const CategoryScreen = lazy(() => import('./screens/CategoryScreen'));
 const ConditionScreen = lazy(() => import('./screens/ConditionScreen'));
 const SymptomCheckerScreen = lazy(() => import('./screens/SymptomCheckerScreen'));
-const QuizFunnelScreen = lazy(() => import('./screens/QuizFunnelScreen'));
 const AdminScreen = lazy(() => import('./screens/AdminScreen'));
 const ProfileScreen = lazy(() => import('./screens/ProfileScreen'));
 
