@@ -7,6 +7,45 @@ const supabase = createClient(
 
 const HOTTOK = Deno.env.get('HOTMART_HOTTOK') ?? '';
 
+/* Meta Conversions API (rastreio de venda server-side, 100% confiável) */
+const META_PIXEL_ID = Deno.env.get('META_PIXEL_ID') ?? '2090986854986123';
+const META_CAPI_TOKEN = Deno.env.get('META_CAPI_TOKEN') ?? '';
+
+async function sha256(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input.trim().toLowerCase()));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function sendMetaPurchase(opts: {
+  email?: string; phone?: string; value?: number; currency?: string;
+  eventId?: string; fbp?: string; fbc?: string;
+}) {
+  if (!META_CAPI_TOKEN) return; // sem token configurado, ignora
+  const user_data: Record<string, unknown> = {};
+  if (opts.email) user_data.em = await sha256(opts.email);
+  if (opts.phone) user_data.ph = await sha256(opts.phone.replace(/\D/g, ''));
+  if (opts.fbp) user_data.fbp = opts.fbp;
+  if (opts.fbc) user_data.fbc = opts.fbc;
+
+  const payload = {
+    data: [{
+      event_name: 'Purchase',
+      event_time: Math.floor(Date.now() / 1000),
+      action_source: 'website',
+      event_id: opts.eventId,
+      user_data,
+      custom_data: { currency: opts.currency ?? 'BRL', value: opts.value ?? undefined },
+    }],
+  };
+  try {
+    await fetch(`https://graph.facebook.com/v19.0/${META_PIXEL_ID}/events?access_token=${META_CAPI_TOKEN}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch { /* falha de rede não derruba o webhook */ }
+}
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -41,9 +80,10 @@ Deno.serve(async (req) => {
       return json({ error: 'unauthorized' }, 401);
     }
     try {
-      const [leadsRes, eventsRes] = await Promise.all([
+      const [leadsRes, eventsRes, purchasesRes] = await Promise.all([
         supabase.from('funnel_leads').select('*').order('id', { ascending: false }).limit(5000),
         supabase.from('funnel_events').select('*').order('id', { ascending: false }).limit(20000),
+        supabase.from('hotmart_purchases').select('*').order('id', { ascending: false }).limit(5000),
       ]);
       const reshapeUtm = (r: any) => ({
         utm_source: r.utm_source, utm_medium: r.utm_medium, utm_campaign: r.utm_campaign,
@@ -58,7 +98,11 @@ Deno.serve(async (req) => {
       const events = (eventsRes.data ?? []).map((r: any) => ({
         event: r.event, data: r.data ?? {}, utm: reshapeUtm(r), ts: r.ts,
       }));
-      return json({ leads, events });
+      const purchases = (purchasesRes.data ?? []).map((r: any) => ({
+        email: r.email, name: r.name, status: r.status, event: r.event,
+        product_name: r.product_name, transaction: r.transaction, value: r.value, ts: r.ts,
+      }));
+      return json({ leads, events, purchases });
     } catch (err) {
       return json({ error: String(err) }, 500);
     }
@@ -139,6 +183,11 @@ Deno.serve(async (req) => {
     const status = purchase.status ?? body.status ?? null;
     const email = (buyer.email ?? body.email ?? '').toString().toLowerCase();
 
+    // valor da compra (Hotmart 2.0: purchase.price.value)
+    const value =
+      purchase?.price?.value ?? purchase?.full_price?.value ?? purchase?.original_offer_price?.value ?? null;
+    const currency = purchase?.price?.currency_value ?? purchase?.price?.currency_code ?? 'BRL';
+
     await supabase.from('hotmart_purchases').upsert({
       email,
       name: buyer.name ?? null,
@@ -147,9 +196,24 @@ Deno.serve(async (req) => {
       transaction: purchase.transaction ?? null,
       product_id: product.id ?? null,
       product_name: product.name ?? null,
+      value,
       raw: body,
       ts: new Date().toISOString(),
     }, { onConflict: 'email' });
+
+    // Dispara Purchase no Meta via CAPI (só para venda aprovada/completa)
+    const evt = String(body.event ?? '').toUpperCase();
+    const st = String(status ?? '').toUpperCase();
+    const isSale = evt === 'PURCHASE_APPROVED' || evt === 'PURCHASE_COMPLETE' || st === 'APPROVED' || st === 'COMPLETE';
+    if (isSale && email) {
+      await sendMetaPurchase({
+        email,
+        phone: buyer.checkout_phone ?? buyer.phone ?? undefined,
+        value: typeof value === 'number' ? value : undefined,
+        currency,
+        eventId: purchase.transaction ?? undefined,
+      });
+    }
   } catch (err) {
     return json({ error: String(err) }, 500);
   }

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { BarChart3, Download, Lock, LogOut, RefreshCw, Users } from 'lucide-react';
+import { BarChart3, Download, Lock, LogOut, RefreshCw, Users, ShoppingBag } from 'lucide-react';
 import { leadsToCSV, fetchAdminData } from '../lib/funnelTracking';
-import type { FunnelEvent, Lead } from '../lib/funnelTracking';
+import type { FunnelEvent, Lead, Purchase } from '../lib/funnelTracking';
 
 /* ── credenciais do admin ── */
 const ADMIN_EMAIL = 'guilhermepinaramos@gmail.com';
@@ -38,18 +38,19 @@ export default function AdminScreen() {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [err, setErr] = useState('');
-  const [tab, setTab] = useState<'funil' | 'leads' | 'campanhas'>('funil');
+  const [tab, setTab] = useState<'funil' | 'leads' | 'vendas' | 'campanhas'>('funil');
 
   const [events, setEvents] = useState<FunnelEvent[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadErr, setLoadErr] = useState('');
 
   const loadData = async (password: string) => {
     setLoading(true); setLoadErr('');
     try {
-      const { leads: l, events: e } = await fetchAdminData(password);
-      setLeads(l); setEvents(e);
+      const { leads: l, events: e, purchases: p } = await fetchAdminData(password);
+      setLeads(l); setEvents(e); setPurchases(p);
     } catch {
       setLoadErr('Não foi possível carregar os dados do servidor.');
     } finally {
@@ -128,8 +129,8 @@ export default function AdminScreen() {
     }
     setLoading(true); setErr('');
     try {
-      const { leads: l, events: e } = await fetchAdminData(pass);
-      setLeads(l); setEvents(e);
+      const { leads: l, events: e, purchases: p } = await fetchAdminData(pass);
+      setLeads(l); setEvents(e); setPurchases(p);
       sessionStorage.setItem(SS_AUTH, '1');
       sessionStorage.setItem(SS_PASS, pass);
       setAuthed(true);
@@ -144,8 +145,16 @@ export default function AdminScreen() {
     sessionStorage.removeItem(SS_AUTH);
     sessionStorage.removeItem(SS_PASS);
     setAuthed(false);
-    setEvents([]); setLeads([]);
+    setEvents([]); setLeads([]); setPurchases([]);
   };
+
+  // vendas aprovadas + faturamento
+  const sales = useMemo(() => {
+    const active = ['APPROVED', 'COMPLETE', 'COMPLETED', 'APROVADO'];
+    const approved = purchases.filter(p => active.includes(String(p.status ?? '').toUpperCase()));
+    const revenue = approved.reduce((s, p) => s + (Number(p.value) || 0), 0);
+    return { count: approved.length, revenue, all: purchases };
+  }, [purchases]);
 
   const refreshData = () => {
     const saved = sessionStorage.getItem(SS_PASS);
@@ -215,24 +224,35 @@ export default function AdminScreen() {
         )}
 
         {/* stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-3">
           {[
-            { label: 'Visitas', value: stats.visits },
+            { label: 'Visitas', value: String(stats.visits), color: '#0D9488' },
+            { label: 'Leads', value: String(stats.leads), color: '#0D9488' },
+            { label: 'Vendas aprovadas', value: String(sales.count), color: '#16A34A' },
+            { label: 'Faturamento', value: `R$ ${sales.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, color: '#16A34A' },
+          ].map(s => (
+            <div key={s.label} className="bg-white rounded-2xl p-4 text-center" style={{ border: '1px solid #E0E0E6' }}>
+              <p className="text-2xl font-extrabold" style={{ color: s.color }}>{s.value}</p>
+              <p className="text-[11px] font-medium mt-0.5" style={{ color: '#5A5A60' }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-2.5 mb-6">
+          {[
             { label: 'Iniciaram quiz', value: stats.starts },
-            { label: 'Leads', value: stats.leads },
             { label: 'Viram resultado', value: stats.results },
             { label: 'Cliques checkout', value: stats.clicks },
           ].map(s => (
-            <div key={s.label} className="bg-white rounded-2xl p-4 text-center" style={{ border: '1px solid #E0E0E6' }}>
-              <p className="text-2xl font-extrabold" style={{ color: '#0D9488' }}>{s.value}</p>
+            <div key={s.label} className="bg-white rounded-2xl p-3 text-center" style={{ border: '1px solid #E0E0E6' }}>
+              <p className="text-lg font-extrabold" style={{ color: '#0D9488' }}>{s.value}</p>
               <p className="text-[11px] font-medium mt-0.5" style={{ color: '#5A5A60' }}>{s.label}</p>
             </div>
           ))}
         </div>
 
         {/* tabs */}
-        <div className="flex gap-2 mb-5">
-          {([['funil', 'Funil', BarChart3], ['leads', `Leads (${leads.length})`, Users], ['campanhas', 'Campanhas', BarChart3]] as const).map(([id, label, Icon]) => (
+        <div className="flex flex-wrap gap-2 mb-5">
+          {([['funil', 'Funil', BarChart3], ['leads', `Leads (${leads.length})`, Users], ['vendas', `Vendas (${sales.count})`, ShoppingBag], ['campanhas', 'Campanhas', BarChart3]] as const).map(([id, label, Icon]) => (
             <button key={id} onClick={() => setTab(id)}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold press"
               style={tab === id
@@ -301,6 +321,49 @@ export default function AdminScreen() {
                         <td className="py-2 px-2">{l.utm.utm_content ?? '—'}</td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── VENDAS ── */}
+        {tab === 'vendas' && (
+          <div className="bg-white rounded-3xl p-5" style={{ border: '1px solid #E0E0E6' }}>
+            <p className="text-xs font-bold tracking-widest mb-4" style={{ color: '#16A34A' }}>VENDAS — COMPRAS RECEBIDAS DA HOTMART</p>
+            {purchases.length === 0 ? (
+              <p className="text-sm py-8 text-center" style={{ color: '#7A7A82' }}>Nenhuma compra registrada ainda.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr style={{ color: '#5A5A60' }}>
+                      {['Data', 'Nome', 'E-mail', 'Produto', 'Valor', 'Status', 'Transação'].map(h => (
+                        <th key={h} className="text-left font-bold py-2 px-2 whitespace-nowrap" style={{ borderBottom: '2px solid #E0E0E6' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {purchases.map((p: Purchase, i) => {
+                      const active = ['APPROVED', 'COMPLETE', 'COMPLETED', 'APROVADO'].includes(String(p.status ?? '').toUpperCase());
+                      return (
+                        <tr key={i} style={{ color: '#3A3A40', borderBottom: '1px solid #F2F2F7' }}>
+                          <td className="py-2 px-2 whitespace-nowrap">{new Date(p.ts).toLocaleString('pt-BR')}</td>
+                          <td className="py-2 px-2 font-medium">{p.name ?? '—'}</td>
+                          <td className="py-2 px-2">{p.email}</td>
+                          <td className="py-2 px-2">{p.product_name ?? '—'}</td>
+                          <td className="py-2 px-2 whitespace-nowrap">{p.value != null ? `R$ ${Number(p.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—'}</td>
+                          <td className="py-2 px-2 whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                              style={active ? { background: '#DCFCE7', color: '#16A34A' } : { background: '#FEF2F2', color: '#B91C1C' }}>
+                              {p.status ?? p.event ?? '—'}
+                            </span>
+                          </td>
+                          <td className="py-2 px-2 whitespace-nowrap">{p.transaction ?? '—'}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

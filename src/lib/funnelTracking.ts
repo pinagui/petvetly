@@ -124,6 +124,17 @@ export function clearAllData() {
   localStorage.removeItem(LS_LEADS);
 }
 
+export interface Purchase {
+  email: string;
+  name?: string | null;
+  status?: string | null;
+  event?: string | null;
+  product_name?: string | null;
+  transaction?: string | null;
+  value?: number | null;
+  ts: string;
+}
+
 /* ── verifica se o e-mail tem compra ativa (libera login do app) ── */
 export async function verifyAccess(email: string): Promise<{ ok: boolean; name?: string | null }> {
   if (!WEBHOOK_URL) return { ok: false };
@@ -137,7 +148,7 @@ export async function verifyAccess(email: string): Promise<{ ok: boolean; name?:
 }
 
 /* ── busca leads/eventos do Supabase para o painel /admin ── */
-export async function fetchAdminData(password: string): Promise<{ leads: Lead[]; events: FunnelEvent[] }> {
+export async function fetchAdminData(password: string): Promise<{ leads: Lead[]; events: FunnelEvent[]; purchases: Purchase[] }> {
   if (!WEBHOOK_URL) throw new Error('WEBHOOK_URL não configurado');
   const res = await fetch(WEBHOOK_URL, {
     method: 'POST',
@@ -147,7 +158,7 @@ export async function fetchAdminData(password: string): Promise<{ leads: Lead[];
   if (res.status === 401) throw new Error('unauthorized');
   if (!res.ok) throw new Error('fetch_failed');
   const data = await res.json();
-  return { leads: data.leads ?? [], events: data.events ?? [] };
+  return { leads: data.leads ?? [], events: data.events ?? [], purchases: data.purchases ?? [] };
 }
 
 /* ── repassa UTMs para o checkout (Hotmart aceita sck + utms) ── */
