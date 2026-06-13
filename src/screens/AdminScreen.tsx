@@ -1,0 +1,321 @@
+import { useMemo, useState } from 'react';
+import type { CSSProperties } from 'react';
+import { BarChart3, Download, Lock, LogOut, RefreshCw, Trash2, Users } from 'lucide-react';
+import { getEvents, getLeads, leadsToCSV, clearAllData, WEBHOOK_URL } from '../lib/funnelTracking';
+import type { FunnelEvent, Lead } from '../lib/funnelTracking';
+
+/* ── credenciais do admin ── */
+const ADMIN_EMAIL = 'guilhermepinaramos@gmail.com';
+const ADMIN_PASS = 'admin0202';
+const SS_AUTH = 'pv_admin_auth';
+
+const LIGHT: CSSProperties = {
+  background: '#F2F2F7',
+  color: '#1C1C1E',
+};
+
+/* etapas do funil na ordem */
+const FUNNEL_STEPS = [
+  { key: 'page_view', label: 'Visitou a página' },
+  { key: 'quiz_start', label: 'Começou o quiz' },
+  ...Array.from({ length: 18 }, (_, i) => ({ key: `q${i + 1}`, label: `Pergunta ${i + 1}` })),
+  { key: 'lead_view', label: 'Viu captura de lead' },
+  { key: 'lead_captured', label: 'Deixou contato (LEAD)' },
+  { key: 'result_view', label: 'Viu o diagnóstico' },
+  { key: 'checkout_click_protocolo', label: 'Clicou — Método R$97' },
+  { key: 'checkout_click_app_mensal', label: 'Clicou — App Mensal R$27,90' },
+  { key: 'checkout_click_app_anual', label: 'Clicou — App Anual R$147' },
+];
+
+function stepOfEvent(ev: FunnelEvent): string | null {
+  if (ev.event === 'q_answered') return String(ev.data?.q ?? '');
+  if (ev.event === 'checkout_click') return `checkout_click_${String(ev.data?.offer ?? '')}`;
+  return ev.event;
+}
+
+export default function AdminScreen() {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem(SS_AUTH) === '1');
+  const [email, setEmail] = useState('');
+  const [pass, setPass] = useState('');
+  const [err, setErr] = useState('');
+  const [refresh, setRefresh] = useState(0);
+  const [tab, setTab] = useState<'funil' | 'leads' | 'campanhas'>('funil');
+
+  const events = useMemo(() => { void refresh; return getEvents(); }, [refresh]);
+  const leads = useMemo(() => { void refresh; return getLeads(); }, [refresh]);
+
+  /* sessões únicas por etapa */
+  const funnelCounts = useMemo(() => {
+    const bySteps = new Map<string, Set<string>>();
+    events.forEach(ev => {
+      const step = stepOfEvent(ev);
+      if (!step) return;
+      if (!bySteps.has(step)) bySteps.set(step, new Set());
+      bySteps.get(step)!.add(ev.utm.session_id);
+    });
+    return FUNNEL_STEPS.map(s => ({ ...s, count: bySteps.get(s.key)?.size ?? 0 }));
+  }, [events]);
+
+  const maxCount = Math.max(1, ...funnelCounts.map(f => f.count));
+
+  /* última etapa de cada sessão = onde parou */
+  const dropoff = useMemo(() => {
+    const lastStep = new Map<string, number>();
+    events.forEach(ev => {
+      const step = stepOfEvent(ev);
+      const idx = FUNNEL_STEPS.findIndex(s => s.key === step);
+      if (idx < 0) return;
+      const cur = lastStep.get(ev.utm.session_id) ?? -1;
+      if (idx > cur) lastStep.set(ev.utm.session_id, idx);
+    });
+    const counts = new Array(FUNNEL_STEPS.length).fill(0) as number[];
+    lastStep.forEach(idx => { counts[idx] += 1; });
+    return counts;
+  }, [events]);
+
+  /* agrupamento por campanha/conjunto/criativo */
+  const campaigns = useMemo(() => {
+    const map = new Map<string, { sessions: Set<string>; leads: number; checkouts: number }>();
+    events.forEach(ev => {
+      const key = [ev.utm.utm_campaign || '(sem campanha)', ev.utm.utm_medium || '—', ev.utm.utm_content || '—'].join('|||');
+      if (!map.has(key)) map.set(key, { sessions: new Set(), leads: 0, checkouts: 0 });
+      const row = map.get(key)!;
+      row.sessions.add(ev.utm.session_id);
+      if (ev.event === 'lead_captured') row.leads += 1;
+      if (ev.event === 'checkout_click') row.checkouts += 1;
+    });
+    return [...map.entries()]
+      .map(([key, v]) => {
+        const [campaign, medium, content] = key.split('|||');
+        return { campaign, medium, content, visits: v.sessions.size, leads: v.leads, checkouts: v.checkouts };
+      })
+      .sort((a, b) => b.visits - a.visits);
+  }, [events]);
+
+  const stats = useMemo(() => {
+    const sessions = new Set(events.map(e => e.utm.session_id));
+    const starts = new Set(events.filter(e => e.event === 'quiz_start').map(e => e.utm.session_id));
+    const results = new Set(events.filter(e => e.event === 'result_view').map(e => e.utm.session_id));
+    const clicks = events.filter(e => e.event === 'checkout_click').length;
+    return { visits: sessions.size, starts: starts.size, leads: leads.length, results: results.size, clicks };
+  }, [events, leads]);
+
+  const login = () => {
+    if (email.trim().toLowerCase() === ADMIN_EMAIL && pass === ADMIN_PASS) {
+      sessionStorage.setItem(SS_AUTH, '1');
+      setAuthed(true);
+      setErr('');
+    } else {
+      setErr('E-mail ou senha incorretos.');
+    }
+  };
+
+  const logout = () => { sessionStorage.removeItem(SS_AUTH); setAuthed(false); };
+
+  const exportCSV = () => {
+    const blob = new Blob([leadsToCSV(leads)], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `petvetly-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const wipe = () => {
+    if (confirm('Apagar TODOS os eventos e leads deste navegador? Essa ação não tem volta.')) {
+      clearAllData();
+      setRefresh(r => r + 1);
+    }
+  };
+
+  /* ══════════ LOGIN ══════════ */
+  if (!authed) {
+    return (
+      <div className="h-full flex items-center justify-center px-6" style={LIGHT}>
+        <div className="w-full max-w-sm bg-white rounded-3xl p-7" style={{ border: '1px solid #E0E0E6', boxShadow: '0 4px 20px rgba(0,0,0,.08)' }}>
+          <div className="w-12 h-12 g-teal rounded-2xl flex items-center justify-center mb-4 shadow-md">
+            <Lock size={20} className="text-white" />
+          </div>
+          <h1 className="text-lg font-bold mb-1" style={{ color: '#1C1C1E' }}>Painel do Funil</h1>
+          <p className="text-xs mb-5" style={{ color: '#5A5A60' }}>Acesso restrito ao administrador.</p>
+          <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="E-mail"
+            className="w-full rounded-xl px-4 py-3 text-sm mb-2 outline-none"
+            style={{ background: '#F2F2F7', border: '1px solid #E0E0E6', color: '#1C1C1E' }} />
+          <input value={pass} onChange={e => setPass(e.target.value)} type="password" placeholder="Senha"
+            onKeyDown={e => e.key === 'Enter' && login()}
+            className="w-full rounded-xl px-4 py-3 text-sm mb-3 outline-none"
+            style={{ background: '#F2F2F7', border: '1px solid #E0E0E6', color: '#1C1C1E' }} />
+          {err && <p className="text-xs text-red-600 mb-3">{err}</p>}
+          <button onClick={login} className="w-full g-teal text-white font-bold py-3.5 rounded-xl text-sm press">
+            Entrar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════ DASHBOARD ══════════ */
+  return (
+    <div className="h-full overflow-y-auto no-scroll" style={LIGHT}>
+      <div className="max-w-3xl mx-auto px-5 py-8">
+
+        {/* header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-xl font-bold" style={{ color: '#1C1C1E' }}>📊 Painel do Funil</h1>
+            <p className="text-xs" style={{ color: '#5A5A60' }}>Quiz Lambedura — rastreamento por UTM</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setRefresh(r => r + 1)} className="p-2.5 rounded-xl bg-white press" style={{ border: '1px solid #E0E0E6' }} title="Atualizar">
+              <RefreshCw size={15} style={{ color: '#5A5A60' }} />
+            </button>
+            <button onClick={logout} className="p-2.5 rounded-xl bg-white press" style={{ border: '1px solid #E0E0E6' }} title="Sair">
+              <LogOut size={15} style={{ color: '#5A5A60' }} />
+            </button>
+          </div>
+        </div>
+
+        {!WEBHOOK_URL && (
+          <div className="rounded-2xl px-4 py-3 mb-5 text-xs leading-relaxed" style={{ background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' }}>
+            ⚠️ <strong>Webhook não configurado.</strong> Este painel mostra apenas os dados gerados NESTE navegador.
+            Para receber leads e eventos de todos os visitantes, configure o <code>WEBHOOK_URL</code> em
+            <code> src/lib/funnelTracking.ts</code> (Make, Zapier, Apps Script, Supabase...).
+          </div>
+        )}
+
+        {/* stats */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5 mb-6">
+          {[
+            { label: 'Visitas', value: stats.visits },
+            { label: 'Iniciaram quiz', value: stats.starts },
+            { label: 'Leads', value: stats.leads },
+            { label: 'Viram resultado', value: stats.results },
+            { label: 'Cliques checkout', value: stats.clicks },
+          ].map(s => (
+            <div key={s.label} className="bg-white rounded-2xl p-4 text-center" style={{ border: '1px solid #E0E0E6' }}>
+              <p className="text-2xl font-extrabold" style={{ color: '#0D9488' }}>{s.value}</p>
+              <p className="text-[11px] font-medium mt-0.5" style={{ color: '#5A5A60' }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* tabs */}
+        <div className="flex gap-2 mb-5">
+          {([['funil', 'Funil', BarChart3], ['leads', `Leads (${leads.length})`, Users], ['campanhas', 'Campanhas', BarChart3]] as const).map(([id, label, Icon]) => (
+            <button key={id} onClick={() => setTab(id)}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold press"
+              style={tab === id
+                ? { background: '#0D9488', color: '#fff' }
+                : { background: '#fff', color: '#5A5A60', border: '1px solid #E0E0E6' }}>
+              <Icon size={13} />{label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── FUNIL ── */}
+        {tab === 'funil' && (
+          <div className="bg-white rounded-3xl p-5" style={{ border: '1px solid #E0E0E6' }}>
+            <p className="text-xs font-bold tracking-widest mb-4" style={{ color: '#0D9488' }}>FUNIL COMPLETO — ONDE CADA SESSÃO CHEGOU E PAROU</p>
+            <div className="space-y-1.5">
+              {funnelCounts.map((s, i) => (
+                <div key={s.key} className="flex items-center gap-2">
+                  <span className="text-[10px] w-40 shrink-0 text-right font-medium" style={{ color: '#5A5A60' }}>{s.label}</span>
+                  <div className="flex-1 h-5 rounded-md overflow-hidden" style={{ background: '#F2F2F7' }}>
+                    <div className="h-full rounded-md g-teal flex items-center"
+                      style={{ width: `${Math.max((s.count / maxCount) * 100, s.count > 0 ? 4 : 0)}%`, minWidth: s.count > 0 ? 22 : 0 }}>
+                      {s.count > 0 && <span className="text-[10px] font-bold text-white px-1.5">{s.count}</span>}
+                    </div>
+                  </div>
+                  <span className="text-[10px] w-16 shrink-0 font-medium" style={{ color: '#B45309' }}>
+                    {dropoff[i] > 0 ? `${dropoff[i]} pararam` : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── LEADS ── */}
+        {tab === 'leads' && (
+          <div className="bg-white rounded-3xl p-5" style={{ border: '1px solid #E0E0E6' }}>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-bold tracking-widest" style={{ color: '#0D9488' }}>PLANILHA DE LEADS — E-MAIL + WHATSAPP</p>
+              <button onClick={exportCSV} disabled={leads.length === 0}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold g-teal text-white press"
+                style={leads.length === 0 ? { opacity: 0.4 } : {}}>
+                <Download size={13} />Exportar CSV
+              </button>
+            </div>
+            {leads.length === 0 ? (
+              <p className="text-sm py-8 text-center" style={{ color: '#7A7A82' }}>Nenhum lead capturado ainda.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr style={{ color: '#5A5A60' }}>
+                      {['Data', 'Nome', 'E-mail', 'WhatsApp', 'Estágio', 'Campanha', 'Criativo'].map(h => (
+                        <th key={h} className="text-left font-bold py-2 px-2 whitespace-nowrap" style={{ borderBottom: '2px solid #E0E0E6' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...leads].reverse().map((l: Lead, i) => (
+                      <tr key={i} style={{ color: '#3A3A40', borderBottom: '1px solid #F2F2F7' }}>
+                        <td className="py-2 px-2 whitespace-nowrap">{new Date(l.ts).toLocaleString('pt-BR')}</td>
+                        <td className="py-2 px-2 font-medium">{l.name}</td>
+                        <td className="py-2 px-2">{l.email}</td>
+                        <td className="py-2 px-2 whitespace-nowrap">{l.whatsapp}</td>
+                        <td className="py-2 px-2 whitespace-nowrap">{l.stage_label ?? '—'}</td>
+                        <td className="py-2 px-2">{l.utm.utm_campaign ?? '—'}</td>
+                        <td className="py-2 px-2">{l.utm.utm_content ?? '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── CAMPANHAS ── */}
+        {tab === 'campanhas' && (
+          <div className="bg-white rounded-3xl p-5" style={{ border: '1px solid #E0E0E6' }}>
+            <p className="text-xs font-bold tracking-widest mb-4" style={{ color: '#0D9488' }}>DESEMPENHO POR CAMPANHA / CONJUNTO / CRIATIVO</p>
+            {campaigns.length === 0 ? (
+              <p className="text-sm py-8 text-center" style={{ color: '#7A7A82' }}>Nenhum tráfego registrado ainda.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr style={{ color: '#5A5A60' }}>
+                      {['Campanha (utm_campaign)', 'Conjunto (utm_medium)', 'Criativo (utm_content)', 'Visitas', 'Leads', 'Cliques checkout'].map(h => (
+                        <th key={h} className="text-left font-bold py-2 px-2 whitespace-nowrap" style={{ borderBottom: '2px solid #E0E0E6' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {campaigns.map((c, i) => (
+                      <tr key={i} style={{ color: '#3A3A40', borderBottom: '1px solid #F2F2F7' }}>
+                        <td className="py-2 px-2 font-medium">{c.campaign}</td>
+                        <td className="py-2 px-2">{c.medium}</td>
+                        <td className="py-2 px-2">{c.content}</td>
+                        <td className="py-2 px-2 font-bold" style={{ color: '#0D9488' }}>{c.visits}</td>
+                        <td className="py-2 px-2 font-bold" style={{ color: '#0D9488' }}>{c.leads}</td>
+                        <td className="py-2 px-2 font-bold" style={{ color: '#B45309' }}>{c.checkouts}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* zona de perigo */}
+        <button onClick={wipe} className="flex items-center gap-1.5 mt-6 text-xs font-medium press" style={{ color: '#DC2626' }}>
+          <Trash2 size={13} />Apagar todos os dados deste navegador
+        </button>
+      </div>
+    </div>
+  );
+}

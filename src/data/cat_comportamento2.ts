@@ -1,0 +1,232 @@
+import type { Category } from './types';
+
+export const catComportamento2: Category = {
+  id: 'comportamento2', name: 'Comportamento Avançado', emoji: '🧩', gradient: 'g-purple',
+  description: 'Fobia de trovões, reatividade, guarda de recursos, TOC e medos específicos',
+  conditions: [
+    {
+      id: 'fobia-sonora', name: 'Fobia de Sons (Trovão/Fogos)', emoji: '⛈️', gradient: 'g-purple',
+      description: 'Medo extremo de trovões, fogos e sons altos — tratável com dessensibilização e medicação',
+      prevalence: '~40% dos cães com medo de trovão; fobia incapacitante em ~15%',
+      protocols: [{
+        id: 'p1', title: 'Protocolo Fobia de Sons', subtitle: 'Dessensibilização sonora gradual, roupa de pressão e medicação situacional',
+        stages: [
+          { id: 's1', label: 'Leve', urgency: 'low', description: 'Nervosismo sem pânico — busca esconderijo.', signs: ['Orelhas para trás', 'Busca esconderijo', 'Recusa petisco durante o evento', 'Retorna ao normal em 30 min'] },
+          { id: 's2', label: 'Moderada', urgency: 'moderate', description: 'Ansiedade intensa com comportamentos de fuga.', signs: ['Tremores', 'Ofego excessivo', 'Destruição ou fuga', 'Saliva excessiva', 'Incontinência'] },
+          { id: 's3', label: 'Grave / Pânico', urgency: 'high', description: 'Pânico total com risco de autolesão.', signs: ['Tentativas de fuga violentas', 'Autolesão ao tentar sair', 'Colapso por exaustão', 'Sem resposta ao tutor'] },
+        ],
+        triggers: ['Sons agudos e imprevisíveis: trovão, fogos, tiros, buzinas', 'Pressão barométrica caindo antes da chuva (cão detecta horas antes)', 'Eletricidade estática (cão pode sentir choque)', 'Memória traumática de evento sonoro passado'],
+        steps: [
+          { title: 'Manejo imediato durante o evento', icon: '🏠', duration: 'Durante',
+            description: 'Ambiente seguro, pressão e cobertura reduzem a ansiedade durante o evento.',
+            checklist: ['Roupa de pressão (Thundershirt): coloque 20 min antes se possível', 'Feromônio sintético (Adaptil): difusor ou spray no ambiente', 'Esconderijo seguro: caixa de transporte com cobertor (ambiente de caverna)', 'Não console excessivamente — valida o medo', 'Música clássica ou ruído branco mascara o som externo', 'Não prenda o cão — cause acesso ao refúgio'] },
+          { title: 'Dessensibilização (prevenção de longo prazo)', icon: '🎵', duration: '3-6 meses',
+            description: 'Exposição gradual ao som em volume mínimo + recompensa = dessensibilização.',
+            checklist: ['Baixe gravação de trovão/fogos (app iCalmDog)', 'Fase 1: volume MÍNIMO (não percebe ansiedade) + petisco por 10 min/dia', 'Fase 2: aumento gradual de volume a cada 3-5 dias', 'Fase 3: adiciona vibração física (subwoofer)', 'Progrida APENAS quando sem ansiedade no volume atual', 'Processo de 3-6 meses — sem pressa'] },
+          { title: 'Medicação situacional', icon: '💊', duration: 'Dias de evento',
+            description: 'Alprazolam, trazodona ou imepitoin para casos moderados/graves nos dias de fogos e temporada de chuvas.',
+            checklist: ['Alprazolam 0,01-0,05mg/kg (benzodiazepínico) — 30-60 min antes', 'Trazodona 5-10mg/kg — efeito em 1-2h (dar mais cedo)', 'Imepitoin 5-30mg/kg — aprovado especificamente para fobia de trovão', 'Fluoxetina contínua + situacional: para casos graves', 'Gabapentina 5-10mg/kg antes do evento'] },
+        ],
+        checklists: [
+          { label: 'Plano para Dia de Evento', freq: 'each_event', items: ['Medicação dada no horário certo?', 'Thundershirt colocado?', 'Esconderijo preparado?', 'Feromônio difundindo?'] },
+          { label: 'Dessensibilização Diária', freq: 'daily', items: ['Sessão de som gravado hoje?', 'Cão sem ansiedade no volume atual?', 'Petisco de alto valor usado?'] },
+        ],
+        weeklyPlan: [
+          { day: 1, label: 'Dia 1 — Plano de Ação', tasks: ['Identifique o nível de fobia', 'Compre Thundershirt, Adaptil e gravação', 'Médico vet para medicação situacional'], note: 'Preparação antes da temporada de chuvas' },
+          { day: 2, label: 'Dia 2 — Ambiente Seguro', tasks: ['Prepare o esconderijo (caixa com cobertor)', 'Instale difusor de Adaptil', 'Identifique o local preferido do cão'], note: 'Cão escolhe o refúgio — não force' },
+          { day: 3, label: 'Dia 3 — Início da Dessensibilização', tasks: ['Volume MÍNIMO da gravação', 'Petisco delicioso enquanto toca', 'Duração: 5-10 minutos'], note: 'Volume tão baixo que o cão mal percebe' },
+          { day: 4, label: 'Dia 4 — Continuação', tasks: ['Mesmo volume se esteve relaxado ontem', 'Continue petiscos', 'Sessão diária de 10 min'], note: 'Consistência é fundamental' },
+          { day: 5, label: 'Dia 5 — Avaliação', tasks: ['Cão aceita petisco durante a sessão?', 'Orelhas relaxadas?', 'Pode aumentar volume ligeiramente?'], note: 'Só aumente se totalmente relaxado' },
+          { day: 6, label: 'Dia 6 — Thundershirt', tasks: ['Coloque o Thundershirt sem evento', 'Associe a petiscos e coisas boas', 'Retire após 30 min'], note: 'Associe Thundershirt ao positivo fora do evento' },
+          { day: 7, label: 'Dia 7 — Revisão', tasks: ['Progresso na dessensibilização?', 'Medicação situacional prescrita?', 'Plano para a próxima temporada definido?'], note: 'Dessensibilização leva 3-6 meses' },
+        ],
+        vetAlert: ['Autolesão durante evento de fobia', 'Colapso por exaustão durante pânico', 'Cão foge de casa durante a fobia'],
+        prevention: ['Inicio de dessensibilização em filhotes antes da 1ª temporada de trovão', 'Thundershirt preventivo no início da temporada', 'Medicação prescrita antes dos dias de festa com fogos (Reveillon, Carnaval)'],
+        myths: [
+          { myth: 'Consolar o cão com medo vai piorar a fobia', truth: 'Consolação não cria ou piora o medo. Conforto genuíno ajuda. Porém, ansiedade excessiva do tutor pode ser transmitida ao cão.' },
+        ],
+        faq: [
+          { q: 'Sedativo antes dos fogos de São João é seguro?', a: 'Sim, com prescrição veterinária. Alprazolam, trazodona e imepitoin são seguros. Nunca use medicamento humano sem orientação — dosagem e toxicidade são diferentes.' },
+        ],
+      }],
+    },
+    {
+      id: 'reatividade', name: 'Reatividade a Outros Cães', emoji: '🐕', gradient: 'g-red',
+      description: 'Latir, puxar e reagir freneticamente a outros cães na coleira — errada e treinável',
+      prevalence: 'Muito comum — até 30% dos cães exibem algum grau na coleira',
+      protocols: [{
+        id: 'p1', title: 'Protocolo Reatividade', subtitle: 'LAT (Look at That), CAT e manejo de distância threshold',
+        stages: [
+          { id: 's1', label: 'Reatividade Leve', urgency: 'low', description: 'Latido e puxada ao ver cão distante — controle possível.', signs: ['Late ao ver cão a > 20m', 'Aceita petisco após o cão passar', 'Retorna a atenção ao tutor com facilidade'] },
+          { id: 's2', label: 'Reatividade Moderada', urgency: 'moderate', description: 'Reação intensa próximo a outros cães.', signs: ['Late, pula e puxa forte na coleira', 'Threshold < 10m', 'Difícil recuperar atenção', 'Cão parece "insano" na coleira'] },
+          { id: 's3', label: 'Reatividade Grave / Agressividade', urgency: 'high', description: 'Tentativa de atacar — risco real de acidente.', signs: ['Tenta morder ao contato', 'Rompeu a coleira ou puxou o tutor ao chão', 'Latido contínuo e incontrolável', 'Pode atacar humanos que se interpõem'] },
+        ],
+        triggers: ['Frustração na coleira (cão sociável que não pode interagir)', 'Medo de outros cães (cão que foi atacado antes)', 'Experiência de socialização negativa na janela crítica', 'Falta de socialização adequada no filhote', 'Ansiedade generalizada transmitida ao encontro com cão'],
+        steps: [
+          { title: 'Manejo de threshold (distância de segurança)', icon: '📏', duration: 'No passeio',
+            description: 'Threshold = distância em que o cão ainda consegue ouvir e obedecer. Trabalhe sempre abaixo do threshold.',
+            checklist: ['Identifique o threshold atual (distância de reação)', 'No passeio: mantenha sempre acima do threshold', 'Se cão reage: afaste imediatamente (não force nem puna)', 'Volte quando cão estiver no threshold ou acima', 'Nunca force encontro — piorou a reatividade'] },
+          { title: 'Técnica LAT (Look At That)', icon: '👁️', duration: '5-10 min/sessão',
+            description: 'Cão vê outro cão → olha para o tutor → recebe petisco. Muda a associação: cão = petisco, não estresse.',
+            checklist: ['Posição: acima do threshold', 'Cão vê o cão estímulo', 'ANTES de reagir, marque com "Sim!" ou clicker', 'Ofereça petisco de alto valor', 'Gradualmente reduza a distância ao longo de semanas', 'Sessões curtas e positivas — 5-10 min'] },
+          { title: 'Treinamento com ajuda profissional', icon: '🏋️', duration: 'Semanas a meses',
+            description: 'Reatividade grave requer treinador certificado com método force-free (positivo).',
+            checklist: ['Treinador certificado CCPDT ou IAABC', 'Método positivo — nunca choque, coleira farpada ou punição', 'Medicação ansiolítica (fluoxetina) como adjuvante para casos graves', 'Grupo de reatividade: exposição controlada com outros cães reativos', 'Progresso é gradual — meses, não dias'] },
+        ],
+        checklists: [
+          { label: 'Passeio Diário', freq: 'daily', items: ['Ficou acima do threshold hoje?', 'Cão reagiu? (quantas vezes)', 'Sessão de LAT feita?', 'Petiscos de alto valor levados?'] },
+        ],
+        weeklyPlan: [
+          { day: 1, label: 'Dia 1 — Avaliação do Threshold', tasks: ['Mapeie o threshold atual (15m? 10m? 5m?)', 'Sem forçar encontros esta semana', 'Compre petiscos de alto valor (frango, salame)'], note: 'Conhecer o threshold é o primeiro passo' },
+          { day: 2, label: 'Dia 2 — Técnica LAT', tasks: ['Passeio em horário de menos cães', 'Pratique LAT a distância segura', '5 min de prática, então afaste'], note: 'Qualidade > quantidade nas sessões' },
+          { day: 3, label: 'Dia 3 — Atenção ao Tutor', tasks: ['Pratique "olha para mim" em casa', '"Deixa" e "vem" com recompensa alta', 'Cão responsivo em casa = base para rua'], note: 'Obediência em casa facilita controle na rua' },
+          { day: 4, label: 'Dia 4 — Passeio Prático', tasks: ['Passeio com petisco posicionado', 'Cruzou com cão: conseguiu chamar atenção?', 'Registre progresso'], note: 'Progresso lento é progresso real' },
+          { day: 5, label: 'Dia 5 — Descanso e Enriquecimento', tasks: ['Kong recheado em casa', 'Jogo de farejamento', 'Descanso do treinamento'], note: 'Cansaço mental reduz reatividade' },
+          { day: 6, label: 'Dia 6 — Revisão de Progresso', tasks: ['Threshold melhorou na semana?', 'Quantas reações na semana?', 'Ajuste o plano'], note: 'Meta: reduzir reações 10-20% por semana' },
+          { day: 7, label: 'Dia 7 — Planejamento', tasks: ['Treinador profissional agendado?', 'Medicação ansiolítica necessária?', 'Continue o protocolo por semanas/meses'], note: 'Reatividade é trabalhosa mas muito melhorável' },
+        ],
+        vetAlert: ['Cão mordeu pessoa que tentava separar', 'Rompeu a coleira e correu atrás de outro cão', 'Sinais de medo extremo além da reatividade'],
+        prevention: ['Socialização adequada entre 3-16 semanas', 'Experiências positivas com outros cães na janela crítica', 'Nunca force encontros não planejados'],
+        myths: [
+          { myth: 'Cão reativo é agressivo e perigoso — nunca vai melhorar', truth: 'Reatividade não é o mesmo que agressividade. Maioria dos cães reativos são frustrados ou com medo, não agressivos. Melhora significativa com treinamento adequado é comum.' },
+        ],
+        faq: [
+          { q: 'Devo usar coleira farpada ou choque para conter a reatividade?', a: 'Não. Punição piora a reatividade — associa outros cães com dor, aumentando a reação. Métodos force-free (positivo) têm evidência científica de eficácia e bem-estar.' },
+        ],
+      }],
+    },
+    {
+      id: 'guarda-recursos', name: 'Guarda de Recursos (Resource Guarding)', emoji: '🦴', gradient: 'g-amber',
+      description: 'Cão growl, late ou morde ao proteger comida, brinquedo ou espaço — modificável com treino',
+      prevalence: '~40% dos cães exibem algum grau; grave em ~10%',
+      protocols: [{
+        id: 'p1', title: 'Protocolo Guarda de Recursos', subtitle: 'Troca (Trade it), afastamento gradual e dessensibilização à aproximação',
+        stages: [
+          { id: 's1', label: 'Leve (Crescimento e Rigidez)', urgency: 'low', description: 'Growl ou rigidez ao aproximar — sem mordida.', signs: ['Growl grave quando se aproxima durante refeição', 'Rigidez corporal sobre o recurso', 'Olhar duro (hard eye)', 'Para de comer e trava ao notar a aproximação'] },
+          { id: 's2', label: 'Moderada', urgency: 'moderate', description: 'Estaladas (snap) sem contato — sinal de escalada.', signs: ['Snap (estalada no ar) ao aproximar muito', 'Growl + snap em sequência', 'Guarda de múltiplos recursos (comida, cama, brinquedo)', 'Guarda de espaço (sofá, cama humana)'] },
+          { id: 's3', label: 'Grave (Mordida)', urgency: 'high', description: 'Mordida real — requer ajuda profissional urgente.', signs: ['Mordida que deixou marca ou sangrou', 'Mordida em crianças', 'Guarda intensa de qualquer recurso', 'Imprevisível'] },
+        ],
+        triggers: ['Medo de perder o recurso — aprendido pela experiência', 'Remoção forçada de itens na história', 'Fome crônica (resgate, cão sem comida regular)', 'Predisposição genética em raças de trabalho', 'Punição prévia ao comer — cria associação negativa com aproximação'],
+        steps: [
+          { title: 'Protocolo de Troca (Trade it)', icon: '🔄', duration: 'Diário',
+            description: 'Cão aprende: sua presença = coisa boa, não perda do recurso.',
+            checklist: ['Enquanto cão come: jogue pedaços de carne longe do pote (não na frente)', 'Cão associa: humano perto = comida extra cai', 'Gradualmente aproxime enquanto joga o petisco', 'Nunca remova a comida sem oferecer algo melhor em troca', '"Trade it": ofereça petisco e, quando soltar, devolva o item'] },
+          { title: 'Manejo de segurança imediato', icon: '🛡️', duration: 'Permanente',
+            description: 'Enquanto o treino progride, evite situações de risco.',
+            warning: 'Guarda de recursos em casa com crianças: SEGURANÇA primeiro. Separe o cão para comer.',
+            checklist: ['Alimente o cão em cômodo separado das crianças', 'Não remova a comida sem estratégia de troca', 'Recolha brinquedos antes de visitas', 'Portão baby separa cão de crianças durante refeições', 'Nenhuma punição — piora a guarda'] },
+        ],
+        checklists: [
+          { label: 'Exercício Diário de Dessensibilização', freq: 'daily', items: ['Sessão de "jogar petisco enquanto come" feita?', 'Nenhuma remoção forçada hoje?', 'Guardas aconteceram? (quantidade e intensidade)'] },
+        ],
+        weeklyPlan: [
+          { day: 1, label: 'Dia 1 — Avaliação e Segurança', tasks: ['Identifique quais recursos guardam', 'Estabeleça zonas seguras (comer separado)', 'Contrate treinador se crianças em casa'], note: 'Segurança primeiro' },
+          { day: 2, label: 'Dia 2 — Treino de Troca', tasks: ['"Trade it" com brinquedo de baixo valor', 'Ofereça petisco, cão solta, devolva', 'Repetir 10x antes de cada refeição'], note: 'Começa com item de baixo valor' },
+          { day: 3, label: 'Dia 3 — Durante a Refeição', tasks: ['Jogue petisco longe do pote enquanto come', 'Não se aproxime ainda', 'Apenas mão jogando petisco de longe'], note: 'Associe presença humana a coisas boas' },
+          { day: 4, label: 'Dia 4 — Gradual Aproximação', tasks: ['Jogue petisco um pouco mais perto', 'Observe growl? Se sim: volte para a distância anterior', 'Nunca force a progressão'], note: 'Sem growl = pode avançar' },
+          { day: 5, label: 'Dia 5 — Avaliação de Progresso', tasks: ['Growl aconteceu esta semana?', 'Cão olha para você ao invés de growlar?', 'Progressão está adequada?'], note: 'Melhora em semanas com treino consistente' },
+          { day: 6, label: 'Dia 6 — Outros Recursos', tasks: ['Repita o protocolo para brinquedos', 'Cama e sofá: regra clara (cão desce ao sinal)', 'Consistência de toda a família'], note: 'Todos na casa devem aplicar o mesmo protocolo' },
+          { day: 7, label: 'Dia 7 — Treinador Profissional', tasks: ['Se mordida ocorreu: treinador esta semana', 'Se crianças em risco: treinador urgente', 'Avalie progresso da semana'], note: 'Mordida = profissional qualificado obrigatório' },
+        ],
+        vetAlert: ['Mordida que deixou marca ou sangrou', 'Guarda de recursos com crianças em casa', 'Escalada rápida da intensidade'],
+        prevention: ['Nunca remover comida do cão por punição', 'Ensinar "trade" desde filhote', 'Refeições regulares — cão sem fome guarda menos'],
+        myths: [
+          { myth: 'Devo dominar o cão e mostrar quem manda ao comer para resolver a guarda', truth: 'Punição e dominância pioram a guarda — cão aprende que humano é ameaça ao recurso. Treino positivo e dessensibilização são a abordagem correta.' },
+        ],
+        faq: [
+          { q: 'Posso resolver guarda de recursos sozinho?', a: 'Guarda leve: sim, com protocolo de troca. Guarda com mordida ou com crianças em casa: treinador certificado obrigatório. Segurança primeiro.' },
+        ],
+      }],
+    },
+    {
+      id: 'toc-canino', name: 'TOC Canino (Comportamentos Compulsivos)', emoji: '🔄', gradient: 'g-cyan',
+      description: 'Perseguição de sombra, automutilação, rotação e lamber sem fim — transtorno compulsivo tratável',
+      prevalence: '~2% dos cães; mais comum em Bull Terrier, Dobermann e Border Collie',
+      protocols: [{
+        id: 'p1', title: 'Protocolo TOC Canino', subtitle: 'Interrupção do circuito compulsivo, enriquecimento e fluoxetina',
+        stages: [
+          { id: 's1', label: 'Leve', urgency: 'low', description: 'Comportamento compulsivo ocasional, interrompível.', signs: ['Persegue sombras 5-10 min/dia', 'Interrompe ao ser chamado', 'Sem autolesão', 'Funcional nos outros aspectos'] },
+          { id: 's2', label: 'Moderado', urgency: 'moderate', description: 'Comportamento frequente, difícil de interromper.', signs: ['2-4h/dia de comportamento compulsivo', 'Difícil desviar a atenção', 'Pode perder refeições', 'Começa a afetar qualidade de vida'] },
+          { id: 's3', label: 'Grave', urgency: 'high', description: 'Autolesão e funcionamento comprometido.', signs: ['> 6h/dia compulsivo', 'Autolesão (lamber até ulcerar)', 'Não come ou dorme adequadamente', 'Transe dissociativo'] },
+        ],
+        triggers: ['Estresse crônico não resolvido', 'Confinamento prolongado sem enriquecimento', 'Predisposição genética (Bull Terrier: até 85% de rotação)', 'Reforço acidental do comportamento pelo tutor', 'Conflito entre motivação e restrição (cão de trabalho ocioso)'],
+        steps: [
+          { title: 'Interrupção antes do sequestro comportamental', icon: '🛑', duration: 'Contínuo',
+            description: 'Interrompa o comportamento ANTES do transe se instalar. Sinal de interrupção + redirecionamento.',
+            checklist: ['Aprenda os sinais pré-compulsivos (foco de olhar, tensão)', 'Interrompa ANTES do transe com sinal claro ("Sai")', 'Redirecione imediatamente para comportamento incompatível', 'Não recompense durante o comportamento compulsivo', 'Não puna — piora a compulsão'] },
+          { title: 'Enriquecimento ambiental massivo', icon: '🎮', duration: 'Diário',
+            description: 'Cão subestimulado desenvolve TOC. Enriquecimento físico e mental reduz a motivação compulsiva.',
+            checklist: ['Exercício físico 1-2h/dia mínimo', 'Farejamento: esconder ração, passeio de farejamento 30 min', 'Kong recheado congelado diário', 'Treinamento de obediência: 15 min/dia (ativa córtex)', 'Eliminar estressores identificados', 'Aumentar interação social (dog park, encontros controlados)'] },
+          { title: 'Fluoxetina (medicação)', icon: '💊', duration: 'Meses',
+            description: 'Fluoxetina reduz a intensidade compulsiva em 70% dos casos. Efeito em 4-8 semanas.',
+            checklist: ['Fluoxetina 1-2mg/kg 1x/dia', 'Efeito terapêutico em 4-8 semanas', 'Sem resultados antes de 8 semanas — ajuste dose', 'Tratamento mínimo 6-12 meses', 'Clomipramina como alternativa', 'Não interromper abruptamente'] },
+        ],
+        checklists: [
+          { label: 'Enriquecimento Diário', freq: 'daily', items: ['Exercício físico realizado?', 'Farejamento ou Kong?', 'Treinamento de obediência?', 'Horas de comportamento compulsivo (total do dia)?'] },
+          { label: 'Fluoxetina', freq: 'daily', items: ['Fluoxetina dada?', 'Efeitos colaterais (anorexia, letargia)?', 'Compulsão menos intensa?'] },
+        ],
+        weeklyPlan: [
+          { day: 1, label: 'Dia 1 — Diagnóstico', tasks: ['Documentar tipo e duração dos comportamentos', 'Identificar gatilhos', 'Consulta com veterinário comportamental'], note: 'Vídeo dos comportamentos é invaluável' },
+          { day: 2, label: 'Dia 2 — Enriquecimento', tasks: ['Implemente rotina de enriquecimento', '2h de exercício físico hoje', 'Kong recheado congelado'], note: 'Enriquecimento é base do tratamento' },
+          { day: 3, label: 'Dia 3 — Fluoxetina Iniciada', tasks: ['Fluoxetina prescrita e iniciada', 'Alimento com a refeição', 'Observe efeitos colaterais iniciais (passageiros)'], note: 'Fluoxetina leva 4-8 semanas para agir' },
+          { day: 4, label: 'Dia 4 — Interrupção', tasks: ['Pratique sinal de interrupção', 'Redirecione antes do transe', 'Recompense comportamento incompatível'], note: 'Interrupção precoce é mais eficaz' },
+          { day: 5, label: 'Dia 5 — Redução de Estressores', tasks: ['Identifique estressores no ambiente', 'Elimine ou reduza o que for possível', 'Rotina estável e previsível'], note: 'Estresse crônico alimenta o TOC' },
+          { day: 6, label: 'Dia 6 — Treinamento Positivo', tasks: ['15 min de obediência ou truques', 'Ativa circuitos corticais diferente dos compulsivos', 'Cão em modo de aprendizado sai do modo compulsivo'], note: 'Aprendizado ativo é neuroprotetor' },
+          { day: 7, label: 'Dia 7 — Registro da Semana', tasks: ['Horas totais de compulsão diminuíram?', 'Enriquecimento sendo feito?', 'Próxima consulta veterinária'], note: 'Progresso em semanas, remissão em meses' },
+        ],
+        vetAlert: ['Autolesão resultando em ferida aberta', 'Cão em transe por horas sem resposta', 'Não come ou dorme por causa do comportamento'],
+        prevention: ['Enriquecimento ambiental adequado desde filhote', 'Não reforçar acidentalmente comportamentos compulsivos', 'Exercício físico e mental regular'],
+        myths: [
+          { myth: 'TOC em cão é só frescura — vai passar', truth: 'TOC canino tem base neurobiológica semelhante ao TOC humano. Sem tratamento, progride. Com fluoxetina e enriquecimento, melhora significativa é esperada.' },
+        ],
+        faq: [
+          { q: 'Bull Terrier sempre vai ter rotação?', a: 'Bull Terrier tem predisposição genética muito alta para comportamento de rotação (spinning). Com manejo adequado desde filhote (exercício, enriquecimento, fluoxetina se necessário), a intensidade pode ser controlada.' },
+        ],
+      }],
+    },
+    {
+      id: 'hiperatividade', name: 'Hiperatividade & TDAH Canino', emoji: '⚡', gradient: 'g-emerald',
+      description: 'Impulsividade, atenção reduzida e hiperatividade extrema — diferente de cão cheio de energia',
+      prevalence: 'TDAH verdadeiro é raro (< 1%); hiperatividade relativa por subestimulação é muito comum',
+      protocols: [{
+        id: 'p1', title: 'Protocolo Hiperatividade', subtitle: 'Enriquecimento, impulse control games e amfetaminas veterinárias em TDAH verdadeiro',
+        stages: [
+          { id: 's1', label: 'Hiperatividade por Subestimulação', urgency: 'low', description: 'Cão com energia não gasta — parece "louco" mas é falta de exercício.', signs: ['Pula em pessoas', 'Destrói objetos quando solitário', 'Não para quieto nunca', 'MELHORA com exercício intenso'] },
+          { id: 's2', label: 'TDAH Canino Verdadeiro', urgency: 'moderate', description: 'Sem melhora com exercício — atenção e impulsividade cronicamente comprometidas.', signs: ['Sem melhora mesmo com muito exercício', 'FC cronicamente elevada em repouso', 'Atenção < 5 segundos em qualquer tarefa', 'Hipersensibilidade a estímulos ambientais'] },
+        ],
+        triggers: ['Subestimulação (causa mais comum de "hiperatividade")', 'TDAH genético (Dálmata, Terriers, certos Pastores)', 'Ansiedade de fundo (hipervigilância)', 'Dieta rica em açúcar e aditivos (efeito menor que em humanos)'],
+        steps: [
+          { title: 'Exercício e enriquecimento', icon: '🏃', duration: 'Diário',
+            description: 'A maioria dos "cães hiperativos" simplesmente não tem exercício suficiente. 30 min não é suficiente para um Border Collie.',
+            checklist: ['Exercício de acordo com a raça — Border Collie: 2-3h/dia', 'Farejamento: 30 min equivale a 2h de caminhada em termos de cansaço', 'Treino de obediência 3-4x/dia × 10-15 min', 'Dog sports (agility, flyball, pastoreio) para raças de trabalho', 'Brinquedos de puzzle que trabalham o cérebro'] },
+          { title: 'Impulse control games', icon: '🎮', duration: 'Diário',
+            description: 'Treino de autocontrole: cão aprende a esperar antes de agir.',
+            checklist: ['Sit antes de comer — esperar com pote na frente', 'Wait antes de sair da porta', '"Olha" — atenção constante antes de recompensa', 'Relaxamento condicionado: tapete = ficar deitado e quieto'] },
+          { title: 'TDAH confirmado: anfetamina veterinária', icon: '💊', duration: 'Com prescrição',
+            description: 'Teste diagnóstico: cão com TDAH verdadeiro ACALMA com anfetaminas (paradoxo igual a humanos).',
+            checklist: ['Diagnóstico por veterinário comportamental', 'Teste diagnóstico com anfetamina: FC deve cair', 'Metilfenidato ou anfetaminas sob supervisão estrita', 'Medicação adjuvante — enriquecimento continua obrigatório'] },
+        ],
+        checklists: [
+          { label: 'Exercício Diário', freq: 'daily', items: ['Horas de exercício hoje?', 'Farejamento realizado?', 'Treino de impulse control?', 'Cão mais calmo após exercício?'] },
+        ],
+        weeklyPlan: [
+          { day: 1, label: 'Dia 1 — Diagnóstico de Causa', tasks: ['Quanto exercício o cão faz atualmente?', 'Sugestão: dobrar o exercício por 2 semanas', 'Eliminar açúcar e corantes da dieta'], note: 'Maioria resolve com mais exercício' },
+          { day: 2, label: 'Dia 2 — Implementação', tasks: ['Caminhada 1h pela manhã', 'Farejamento 30 min à tarde', 'Treino de obediência 15 min'], note: 'Agenda estruturada é fundamental' },
+          { day: 3, label: 'Dia 3 — Impulse Control', tasks: ['Sit + espera antes de comer (5 min)', 'Wait antes da porta', 'Recompense o calm', 'Ignore o frenesi'], note: 'Autocontrole é treinável' },
+          { day: 4, label: 'Dia 4 — Avaliação', tasks: ['Cão mais calmo após exercício?', 'Se sim: hiperatividade por subestimulação', 'Se não: referência para comportamental'], note: 'TDAH verdadeiro não melhora só com exercício' },
+          { day: 5, label: 'Dia 5 — Rotina Estruturada', tasks: ['Horários fixos para tudo', 'Previsibilidade reduz ansiedade', 'Cama/espaço próprio confortável'], note: 'Rotina é especialmente importante para cães hiperativos' },
+          { day: 6, label: 'Dia 6 — Avaliação de 5 Dias', tasks: ['Horas de exercício média?', 'Comportamentos destrutivos diminuíram?', 'Cão aceita mais treinos?'], note: 'Melhora esperada em 1-2 semanas com mais exercício' },
+          { day: 7, label: 'Dia 7 — Plano de Longo Prazo', tasks: ['Rotina sustentável definida', 'Dog sport ou atividade específica para a raça?', 'TDAH: consulta comportamental agendada?'], note: 'Cão feliz é cão cansado' },
+        ],
+        vetAlert: ['Sem melhora com exercício intenso por 2 semanas', 'Destruição grave e autolesão', 'Incapaz de aprender qualquer comportamento'],
+        prevention: ['Exercício adequado para cada raça desde filhote', 'Escolha de raça compatível com estilo de vida', 'Border Collie em apartamento sem exercício = hiperatividade quase garantida'],
+        myths: [
+          { myth: 'Cão agitado quer dominar o tutor', truth: 'Hiperatividade é excesso de energia não canalizada, não dominância. Mais exercício e estrutura, não punição, são a solução.' },
+        ],
+        faq: [
+          { q: 'Meu cão precisa de Ritalina?', a: 'Provavelmente não. A grande maioria dos cães "hiperativos" precisa de mais exercício e enriquecimento. TDAH verdadeiro é raro e requer diagnóstico veterinário comportamental.' },
+        ],
+      }],
+    },
+  ],
+};
