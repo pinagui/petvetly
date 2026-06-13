@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Check, ChevronLeft, ShieldCheck, Clock, Sparkles, Gift } from 'lucide-react';
 import { captureUTMs, track, saveLead, checkoutUrl } from '../lib/funnelTracking';
+import { fbqTrack } from '../lib/pixel';
 
 /* ════════════════════════════════════════════════════════════════════
    CONFIGURAÇÃO — troque pelos seus links de checkout da Hotmart
@@ -579,6 +580,7 @@ export default function QuizFunnelScreen() {
     if (zap.length < 10) { setLeadErr('Digite um WhatsApp válido com DDD.'); return; }
     const st = computeStage(answers);
     saveLead({ name: leadName.trim(), email, whatsapp: zap, stage: st.n, stage_label: st.label });
+    fbqTrack('Lead', { content_name: 'quiz_funnel', stage: st.n });
     try { sndChime(); } catch { /* sem áudio */ }
     setLeadErr('');
     setPhase('analyzing');
@@ -909,7 +911,7 @@ export default function QuizFunnelScreen() {
               <span className="text-sm" style={{ color: '#7A7A82' }}>pagamento único · acesso imediato</span>
             </div>
             <a href={checkoutUrl(CHECKOUT_PROTOCOLO)}
-              onClick={() => track('checkout_click', { offer: 'protocolo' })}
+              onClick={() => { track('checkout_click', { offer: 'protocolo' }); fbqTrack('InitiateCheckout', { content_name: 'protocolo', value: 97, currency: 'BRL' }); }}
               className="block w-full g-teal text-white font-bold py-4 rounded-2xl text-sm text-center shadow-lg shadow-teal-600/25 press">
               QUERO O MÉTODO COMPLETO <ArrowRight size={15} className="inline ml-1" />
             </a>
@@ -1027,7 +1029,7 @@ export default function QuizFunnelScreen() {
 
             <p className="text-xs mb-4" style={{ color: '#7A7A82' }}>Cancela quando quiser. Sem fidelidade.</p>
             <a href={checkoutUrl(plan === 'anual' ? CHECKOUT_APP_ANUAL : CHECKOUT_APP_MENSAL)}
-              onClick={() => track('checkout_click', { offer: plan === 'anual' ? 'app_anual' : 'app_mensal' })}
+              onClick={() => { const isAnual = plan === 'anual'; track('checkout_click', { offer: isAnual ? 'app_anual' : 'app_mensal' }); fbqTrack('InitiateCheckout', { content_name: isAnual ? 'app_anual' : 'app_mensal', value: isAnual ? 147 : 27.90, currency: 'BRL' }); }}
               className="block w-full font-bold py-4 rounded-2xl text-sm text-center press text-white"
               style={{ background: 'linear-gradient(135deg, #f59e0b, #ea580c)', boxShadow: '0 8px 24px rgba(234,88,12,0.25)' }}>
               QUERO O APP COMPLETO + BÔNUS {plan === 'anual' ? '(R$ 147/ANO)' : '(R$ 27,90/MÊS)'} <ArrowRight size={15} className="inline ml-1" />

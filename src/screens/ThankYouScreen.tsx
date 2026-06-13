@@ -1,21 +1,42 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, ArrowRight, Mail, ShieldCheck } from 'lucide-react';
+import { Check } from 'lucide-react';
+import { fbqTrack, readPurchaseValue, readQuery } from '../lib/pixel';
 
 const TEAL = '#0D9488';
 const TEAL2 = '#0891B2';
-
-const STEPS = [
-  { icon: '📧', title: 'Confira seu e-mail', sub: 'A Hotmart enviou a confirmação da sua compra. Guarde esse e-mail.' },
-  { icon: '🔑', title: 'Acesse com o mesmo e-mail', sub: 'Entre no app usando exatamente o e-mail que você usou na compra.' },
-  { icon: '🐶', title: 'Cadastre seu cão', sub: 'Em 30 segundos você personaliza o app para o seu pet.' },
-];
+const REDIRECT_MS = 2500;
 
 export default function ThankYouScreen() {
+  const navigate = useNavigate();
+  const fired = useRef(false);
+
+  useEffect(() => {
+    if (fired.current) return;
+    fired.current = true;
+
+    // Dispara a conversão de compra no Meta Pixel (valor vem da query: ?value=147)
+    const { value, currency } = readPurchaseValue();
+    const transactionId = readQuery('transaction') ?? readQuery('tid') ?? readQuery('hottok');
+    const contentName = readQuery('product') ?? readQuery('prod') ?? 'PetVetly';
+
+    fbqTrack('Purchase', {
+      value: value ?? undefined,
+      currency,
+      content_name: contentName,
+      ...(transactionId ? { transaction_id: transactionId } : {}),
+    });
+
+    // Redireciona para o app logo em seguida
+    const t = setTimeout(() => navigate('/login', { replace: true }), REDIRECT_MS);
+    return () => clearTimeout(t);
+  }, [navigate]);
+
   return (
     <div className="min-h-full overflow-y-auto flex flex-col items-center justify-center px-5 py-12"
          style={{ background: '#F8FAFC', color: '#0F172A' }}>
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-sm text-center">
         <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 200, damping: 14 }}
                     className="w-20 h-20 mx-auto rounded-full flex items-center justify-center shadow-xl"
@@ -24,43 +45,23 @@ export default function ThankYouScreen() {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <h1 className="text-3xl font-extrabold text-center mt-7 tracking-tight">Compra confirmada! 🎉</h1>
-          <p className="text-center mt-3" style={{ color: '#475569' }}>
+          <h1 className="text-3xl font-extrabold mt-7 tracking-tight">Compra confirmada! 🎉</h1>
+          <p className="mt-3" style={{ color: '#475569' }}>
             Seja bem-vindo ao <span className="font-bold" style={{ color: TEAL }}>PetVetly</span>.
-            Seu acesso já está liberado — agora é só entrar.
+            Estamos liberando seu acesso…
           </p>
         </motion.div>
 
-        {/* Botão principal → login */}
-        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <Link to="/login"
-                className="flex items-center justify-center gap-2 font-bold text-white px-7 py-4 rounded-2xl text-sm shadow-lg press mt-8"
-                style={{ background: `linear-gradient(135deg,${TEAL},${TEAL2})`, boxShadow: `0 10px 30px ${TEAL}40` }}>
-            Acessar o app agora <ArrowRight size={17} />
-          </Link>
-          <p className="flex items-center justify-center gap-1.5 text-xs mt-4" style={{ color: '#94A3B8' }}>
-            <Mail size={13} /> Use o mesmo e-mail da sua compra na Hotmart
-          </p>
-        </motion.div>
-
-        {/* Próximos passos */}
-        <div className="mt-10 space-y-3">
-          {STEPS.map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.08 }}
-                        className="flex items-center gap-3 rounded-2xl px-4 py-3.5"
-                        style={{ background: '#fff', border: '1px solid #E2E8F0' }}>
-              <span className="text-2xl w-9 text-center">{s.icon}</span>
-              <div>
-                <p className="font-semibold text-sm">{s.title}</p>
-                <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>{s.sub}</p>
-              </div>
-            </motion.div>
-          ))}
+        <div className="flex items-center justify-center gap-2 mt-8" style={{ color: '#94A3B8' }}>
+          <span className="w-4 h-4 border-2 rounded-full animate-spin"
+                style={{ borderColor: `${TEAL}33`, borderTopColor: TEAL }} />
+          <span className="text-sm">Redirecionando para o app…</span>
         </div>
 
-        <p className="flex items-center justify-center gap-1.5 text-xs text-center mt-8" style={{ color: '#94A3B8' }}>
-          <ShieldCheck size={13} /> Garantia de 7 dias · Suporte via Hotmart
-        </p>
+        <button onClick={() => navigate('/login', { replace: true })}
+                className="text-sm font-semibold mt-6 press" style={{ color: TEAL }}>
+          Acessar agora →
+        </button>
       </div>
     </div>
   );
