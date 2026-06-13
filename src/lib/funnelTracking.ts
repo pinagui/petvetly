@@ -7,7 +7,7 @@
    endpoint seu (Zapier, Make, Google Apps Script, Supabase etc.).
    Cada evento/lead será enviado via POST JSON para esse endpoint.
    ════════════════════════════════════════════════════════════════════ */
-export const WEBHOOK_URL = ''; // ex.: 'https://hook.us1.make.com/xxxxx'
+export const WEBHOOK_URL = 'https://tffkgxbimyebliajpvlh.supabase.co/functions/v1/hotmart-webhook';
 
 const SS_UTM = 'pv_utm';
 const LS_EVENTS = 'pv_events';
