@@ -7,7 +7,7 @@ import { captureUTMs, track, saveLead, checkoutUrl } from '../lib/funnelTracking
 /* ════════════════════════════════════════════════════════════════════
    CONFIGURAÇÃO — troque pelos seus links de checkout da Hotmart
    ════════════════════════════════════════════════════════════════════ */
-const CHECKOUT_PROTOCOLO = 'https://pay.hotmart.com/SEU_LINK_PROTOCOLO';   // R$ 97 — Método Patas Saudáveis
+const CHECKOUT_PROTOCOLO = 'https://pay.hotmart.com/G106054137K';           // R$ 97 — Método Patas Saudáveis
 const CHECKOUT_APP_MENSAL = 'https://pay.hotmart.com/J106307416B?off=u7b0kisi'; // R$ 27,90/mês — PetVetly completo
 const CHECKOUT_APP_ANUAL  = 'https://pay.hotmart.com/J106307416B?off=4bf7rjdg'; // R$ 147/ano — PetVetly completo anual
 /* Foto da Dra. Ana: salve a imagem como  public/dra-ana.jpg  */
