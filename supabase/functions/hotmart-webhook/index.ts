@@ -34,6 +34,36 @@ Deno.serve(async (req) => {
     (body.hottok as string | undefined) ??
     '';
 
+  // ── 0) Painel admin: lê leads/eventos do Supabase (senha no servidor) ──
+  if (body.action === 'admin_fetch') {
+    const ADMIN_PASS = Deno.env.get('PV_ADMIN_PASS') ?? '';
+    if (!ADMIN_PASS || (body.password as string) !== ADMIN_PASS) {
+      return json({ error: 'unauthorized' }, 401);
+    }
+    try {
+      const [leadsRes, eventsRes] = await Promise.all([
+        supabase.from('funnel_leads').select('*').order('id', { ascending: false }).limit(5000),
+        supabase.from('funnel_events').select('*').order('id', { ascending: false }).limit(20000),
+      ]);
+      const reshapeUtm = (r: any) => ({
+        utm_source: r.utm_source, utm_medium: r.utm_medium, utm_campaign: r.utm_campaign,
+        utm_content: r.utm_content, utm_term: r.utm_term, utm_id: r.utm_id,
+        xcod: r.xcod, fbclid: r.fbclid, session_id: r.session_id ?? '',
+        platform: r.platform, landed_at: r.landed_at,
+      });
+      const leads = (leadsRes.data ?? []).map((r: any) => ({
+        name: r.name, email: r.email, whatsapp: r.whatsapp,
+        stage: r.stage, stage_label: r.stage_label, utm: reshapeUtm(r), ts: r.ts,
+      }));
+      const events = (eventsRes.data ?? []).map((r: any) => ({
+        event: r.event, data: r.data ?? {}, utm: reshapeUtm(r), ts: r.ts,
+      }));
+      return json({ leads, events });
+    } catch (err) {
+      return json({ error: String(err) }, 500);
+    }
+  }
+
   // ── 1) Eventos/leads do próprio funil (enviados pelo navegador) ──
   const type = body.type as string | undefined;
   if (type === 'lead' || type === 'event') {

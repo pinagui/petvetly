@@ -1,20 +1,25 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { useTheme } from './contexts/ThemeContext';
 import { Sun, Moon } from 'lucide-react';
-import LandingScreen from './screens/LandingScreen';
-import LoginScreen from './screens/LoginScreen';
-import ThankYouScreen from './screens/ThankYouScreen';
-import OnboardingScreen from './screens/OnboardingScreen';
-import HomeScreen from './screens/HomeScreen';
-import CategoryScreen from './screens/CategoryScreen';
-import ConditionScreen from './screens/ConditionScreen';
-import SymptomCheckerScreen from './screens/SymptomCheckerScreen';
-import QuizFunnelScreen from './screens/QuizFunnelScreen';
-import AdminScreen from './screens/AdminScreen';
-import ProfileScreen from './screens/ProfileScreen';
 import BottomNav from './components/BottomNav';
 import Sidebar from './components/Sidebar';
+
+/* Lazy: cada tela vira um chunk separado. As telas internas do app
+   (Home/Category/Condition/Profile) carregam os 100 arquivos de dados —
+   por isso NÃO podem entrar no bundle inicial de /quiz e / (tráfego pago). */
+const LandingScreen = lazy(() => import('./screens/LandingScreen'));
+const LoginScreen = lazy(() => import('./screens/LoginScreen'));
+const ThankYouScreen = lazy(() => import('./screens/ThankYouScreen'));
+const OnboardingScreen = lazy(() => import('./screens/OnboardingScreen'));
+const HomeScreen = lazy(() => import('./screens/HomeScreen'));
+const CategoryScreen = lazy(() => import('./screens/CategoryScreen'));
+const ConditionScreen = lazy(() => import('./screens/ConditionScreen'));
+const SymptomCheckerScreen = lazy(() => import('./screens/SymptomCheckerScreen'));
+const QuizFunnelScreen = lazy(() => import('./screens/QuizFunnelScreen'));
+const AdminScreen = lazy(() => import('./screens/AdminScreen'));
+const ProfileScreen = lazy(() => import('./screens/ProfileScreen'));
 
 function ThemeToggleMobile() {
   const { theme, toggle } = useTheme();
@@ -78,14 +83,16 @@ function AppShell() {
       <Sidebar />
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <div className="flex-1 overflow-y-auto no-scroll">
-          <Routes>
-            <Route path="home" element={<HomeScreen />} />
-            <Route path="category/:categoryId" element={<CategoryScreen />} />
-            <Route path="condition/:categoryId/:conditionId" element={<ConditionScreen />} />
-            <Route path="checker" element={<SymptomCheckerScreen />} />
-            <Route path="profile" element={<ProfileScreen />} />
-            <Route path="*" element={<Navigate to="/home" replace />} />
-          </Routes>
+          <Suspense fallback={<Loader />}>
+            <Routes>
+              <Route path="home" element={<HomeScreen />} />
+              <Route path="category/:categoryId" element={<CategoryScreen />} />
+              <Route path="condition/:categoryId/:conditionId" element={<ConditionScreen />} />
+              <Route path="checker" element={<SymptomCheckerScreen />} />
+              <Route path="profile" element={<ProfileScreen />} />
+              <Route path="*" element={<Navigate to="/home" replace />} />
+            </Routes>
+          </Suspense>
           <div className="md:hidden h-24" />
         </div>
       </main>
@@ -97,15 +104,17 @@ function AppShell() {
 
 export default function App() {
   return (
-    <Routes>
-      {/* Públicas */}
-      <Route path="/" element={<LandingScreen />} />
-      <Route path="/quiz/*" element={<QuizFunnelScreen />} />
-      <Route path="/admin/*" element={<AdminScreen />} />
-      <Route path="/obrigado" element={<ThankYouScreen />} />
-      <Route path="/login" element={<LoginGate />} />
-      {/* App autenticado */}
-      <Route path="/*" element={<AppShell />} />
-    </Routes>
+    <Suspense fallback={<Loader />}>
+      <Routes>
+        {/* Públicas */}
+        <Route path="/" element={<LandingScreen />} />
+        <Route path="/quiz/*" element={<QuizFunnelScreen />} />
+        <Route path="/admin/*" element={<AdminScreen />} />
+        <Route path="/obrigado" element={<ThankYouScreen />} />
+        <Route path="/login" element={<LoginGate />} />
+        {/* App autenticado */}
+        <Route path="/*" element={<AppShell />} />
+      </Routes>
+    </Suspense>
   );
 }

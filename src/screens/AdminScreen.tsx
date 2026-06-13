@@ -1,13 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { BarChart3, Download, Lock, LogOut, RefreshCw, Trash2, Users } from 'lucide-react';
-import { getEvents, getLeads, leadsToCSV, clearAllData, WEBHOOK_URL } from '../lib/funnelTracking';
+import { BarChart3, Download, Lock, LogOut, RefreshCw, Users } from 'lucide-react';
+import { leadsToCSV, fetchAdminData } from '../lib/funnelTracking';
 import type { FunnelEvent, Lead } from '../lib/funnelTracking';
 
 /* ── credenciais do admin ── */
 const ADMIN_EMAIL = 'guilhermepinaramos@gmail.com';
-const ADMIN_PASS = 'admin0202';
 const SS_AUTH = 'pv_admin_auth';
+const SS_PASS = 'pv_admin_pass';
 
 const LIGHT: CSSProperties = {
   background: '#F2F2F7',
@@ -38,11 +38,33 @@ export default function AdminScreen() {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [err, setErr] = useState('');
-  const [refresh, setRefresh] = useState(0);
   const [tab, setTab] = useState<'funil' | 'leads' | 'campanhas'>('funil');
 
-  const events = useMemo(() => { void refresh; return getEvents(); }, [refresh]);
-  const leads = useMemo(() => { void refresh; return getLeads(); }, [refresh]);
+  const [events, setEvents] = useState<FunnelEvent[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadErr, setLoadErr] = useState('');
+
+  const loadData = async (password: string) => {
+    setLoading(true); setLoadErr('');
+    try {
+      const { leads: l, events: e } = await fetchAdminData(password);
+      setLeads(l); setEvents(e);
+    } catch {
+      setLoadErr('Não foi possível carregar os dados do servidor.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // carrega ao montar se já estiver logado (senha guardada na sessão)
+  useEffect(() => {
+    if (authed) {
+      const saved = sessionStorage.getItem(SS_PASS);
+      if (saved) loadData(saved);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* sessões únicas por etapa */
   const funnelCounts = useMemo(() => {
@@ -100,17 +122,35 @@ export default function AdminScreen() {
     return { visits: sessions.size, starts: starts.size, leads: leads.length, results: results.size, clicks };
   }, [events, leads]);
 
-  const login = () => {
-    if (email.trim().toLowerCase() === ADMIN_EMAIL && pass === ADMIN_PASS) {
+  const login = async () => {
+    if (email.trim().toLowerCase() !== ADMIN_EMAIL) {
+      setErr('E-mail ou senha incorretos.'); return;
+    }
+    setLoading(true); setErr('');
+    try {
+      const { leads: l, events: e } = await fetchAdminData(pass);
+      setLeads(l); setEvents(e);
       sessionStorage.setItem(SS_AUTH, '1');
+      sessionStorage.setItem(SS_PASS, pass);
       setAuthed(true);
-      setErr('');
-    } else {
+    } catch {
       setErr('E-mail ou senha incorretos.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const logout = () => { sessionStorage.removeItem(SS_AUTH); setAuthed(false); };
+  const logout = () => {
+    sessionStorage.removeItem(SS_AUTH);
+    sessionStorage.removeItem(SS_PASS);
+    setAuthed(false);
+    setEvents([]); setLeads([]);
+  };
+
+  const refreshData = () => {
+    const saved = sessionStorage.getItem(SS_PASS);
+    if (saved) loadData(saved);
+  };
 
   const exportCSV = () => {
     const blob = new Blob([leadsToCSV(leads)], { type: 'text/csv;charset=utf-8' });
@@ -119,13 +159,6 @@ export default function AdminScreen() {
     a.download = `petvetly-leads-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
-  };
-
-  const wipe = () => {
-    if (confirm('Apagar TODOS os eventos e leads deste navegador? Essa ação não tem volta.')) {
-      clearAllData();
-      setRefresh(r => r + 1);
-    }
   };
 
   /* ══════════ LOGIN ══════════ */
@@ -146,8 +179,8 @@ export default function AdminScreen() {
             className="w-full rounded-xl px-4 py-3 text-sm mb-3 outline-none"
             style={{ background: '#F2F2F7', border: '1px solid #E0E0E6', color: '#1C1C1E' }} />
           {err && <p className="text-xs text-red-600 mb-3">{err}</p>}
-          <button onClick={login} className="w-full g-teal text-white font-bold py-3.5 rounded-xl text-sm press">
-            Entrar
+          <button onClick={login} disabled={loading} className="w-full g-teal text-white font-bold py-3.5 rounded-xl text-sm press disabled:opacity-50">
+            {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </div>
       </div>
@@ -166,8 +199,8 @@ export default function AdminScreen() {
             <p className="text-xs" style={{ color: '#5A5A60' }}>Quiz Lambedura — rastreamento por UTM</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setRefresh(r => r + 1)} className="p-2.5 rounded-xl bg-white press" style={{ border: '1px solid #E0E0E6' }} title="Atualizar">
-              <RefreshCw size={15} style={{ color: '#5A5A60' }} />
+            <button onClick={refreshData} disabled={loading} className="p-2.5 rounded-xl bg-white press disabled:opacity-50" style={{ border: '1px solid #E0E0E6' }} title="Atualizar">
+              <RefreshCw size={15} className={loading ? 'animate-spin' : ''} style={{ color: '#5A5A60' }} />
             </button>
             <button onClick={logout} className="p-2.5 rounded-xl bg-white press" style={{ border: '1px solid #E0E0E6' }} title="Sair">
               <LogOut size={15} style={{ color: '#5A5A60' }} />
@@ -175,11 +208,9 @@ export default function AdminScreen() {
           </div>
         </div>
 
-        {!WEBHOOK_URL && (
-          <div className="rounded-2xl px-4 py-3 mb-5 text-xs leading-relaxed" style={{ background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' }}>
-            ⚠️ <strong>Webhook não configurado.</strong> Este painel mostra apenas os dados gerados NESTE navegador.
-            Para receber leads e eventos de todos os visitantes, configure o <code>WEBHOOK_URL</code> em
-            <code> src/lib/funnelTracking.ts</code> (Make, Zapier, Apps Script, Supabase...).
+        {loadErr && (
+          <div className="rounded-2xl px-4 py-3 mb-5 text-xs leading-relaxed" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B' }}>
+            ⚠️ {loadErr} <button onClick={refreshData} className="font-bold underline">Tentar de novo</button>
           </div>
         )}
 
@@ -311,10 +342,9 @@ export default function AdminScreen() {
           </div>
         )}
 
-        {/* zona de perigo */}
-        <button onClick={wipe} className="flex items-center gap-1.5 mt-6 text-xs font-medium press" style={{ color: '#DC2626' }}>
-          <Trash2 size={13} />Apagar todos os dados deste navegador
-        </button>
+        <p className="text-center text-[11px] mt-6" style={{ color: '#9A9AA0' }}>
+          Dados em tempo real do Supabase · {events.length} eventos · {leads.length} leads
+        </p>
       </div>
     </div>
   );

@@ -4,20 +4,21 @@ import {
   ArrowRight, Check, ShieldCheck, Stethoscope, Zap, BookOpen,
   ListChecks, HeartPulse, Clock, Star, PawPrint,
 } from 'lucide-react';
-import { allCategories } from '../data/index';
-
-/* Funil faz a venda; landing apresenta o app e direciona. */
+/* Funil faz a venda; landing apresenta o app e direciona.
+   Os totais são constantes (evita importar os 100 arquivos de dados
+   na landing, que é a porta de entrada do tráfego pago — performance). */
 const CHECKOUT_ANUAL = 'https://pay.hotmart.com/J106307416B?off=4bf7rjdg';
 
 const TEAL = '#0D9488';
 const TEAL2 = '#0891B2';
 
-const totalConditions = allCategories.reduce((s, c) => s + c.conditions.length, 0);
+const TOTAL_CATEGORIES = 100;
+const TOTAL_CONDITIONS = 200;
 
 const FEATURES = [
   { icon: Stethoscope, title: 'Protocolos completos', sub: 'Guias passo a passo para cada sintoma, escritos pela Dra. Ana Paula.' },
   { icon: Zap, title: 'Triagem em 2 minutos', sub: 'Descubra a urgência real do problema do seu cão antes de entrar em pânico.' },
-  { icon: BookOpen, title: `${allCategories.length}+ categorias`, sub: 'Da lambedura de patas a emergências — tudo organizado e fácil de achar.' },
+  { icon: BookOpen, title: `${TOTAL_CATEGORIES}+ categorias`, sub: 'Da lambedura de patas a emergências — tudo organizado e fácil de achar.' },
   { icon: ListChecks, title: 'Checklists interativos', sub: 'Acompanhe cada etapa do tratamento em casa, sem se perder.' },
   { icon: HeartPulse, title: 'Sinais de alerta', sub: 'Saiba exatamente quando é hora de correr para o veterinário.' },
   { icon: Clock, title: 'Disponível 24h', sub: 'No seu bolso, a qualquer hora do dia ou da noite.' },
@@ -118,8 +119,8 @@ export default function LandingScreen() {
       <section className="border-y" style={{ borderColor: '#E2E8F0', background: '#fff' }}>
         <div className="max-w-5xl mx-auto px-5 py-8 grid grid-cols-3 gap-4 text-center">
           {[
-            { v: `${allCategories.length}+`, l: 'Categorias' },
-            { v: `${totalConditions}+`, l: 'Condições detalhadas' },
+            { v: `${TOTAL_CATEGORIES}+`, l: 'Categorias' },
+            { v: `${TOTAL_CONDITIONS}+`, l: 'Condições detalhadas' },
             { v: '24h', l: 'Sempre disponível' },
           ].map(s => (
             <div key={s.l}>
@@ -213,7 +214,7 @@ export default function LandingScreen() {
             <ul className="space-y-2.5 mt-6 text-sm">
               {[
                 'Acesso completo a todos os protocolos',
-                `Todas as ${allCategories.length}+ categorias`,
+                `Todas as ${TOTAL_CATEGORIES}+ categorias`,
                 'Triagem inteligente ilimitada',
                 'Checklists interativos',
                 'Atualizações constantes de conteúdo',
