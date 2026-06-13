@@ -1,7 +1,13 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Mail, ArrowRight, ShieldCheck, Check } from 'lucide-react';
+
+const TEAL = '#0D9488';
+const TEAL2 = '#0891B2';
+
+const PROOF = ['Protocolos passo a passo', 'Triagem em 2 minutos', '100+ categorias', 'Checklists interativos'];
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -19,76 +25,89 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="flex flex-col min-h-full" style={{ background: 'var(--page)' }}>
-      {/* Hero gradient */}
-      <div className="relative h-72 g-teal flex flex-col items-center justify-end pb-8 overflow-hidden">
-        <div className="absolute inset-0 opacity-20"
-          style={{ backgroundImage: 'radial-gradient(circle at 30% 20%, #fff 0%, transparent 50%), radial-gradient(circle at 70% 80%, #fff 0%, transparent 40%)' }} />
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.6 }}
-          className="relative flex flex-col items-center">
-          <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mb-4 shadow-2xl border border-white/30">
-            <span className="text-5xl">🐾</span>
-          </div>
-          <h1 className="text-white text-3xl font-bold tracking-tight">PetVetly</h1>
-          <p className="text-white/80 text-sm mt-1">Veterinário 24h no seu bolso</p>
-        </motion.div>
+    <div className="min-h-full flex flex-col" style={{ background: '#F8FAFC', color: '#0F172A' }}>
+      {/* Top brand bar */}
+      <div className="px-5 pt-6">
+        <Link to="/" className="inline-flex items-center gap-2 press">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-md"
+               style={{ background: `linear-gradient(135deg,${TEAL},${TEAL2})` }}>🐾</div>
+          <span className="font-bold text-lg tracking-tight">PetVetly</span>
+        </Link>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 px-6 pt-8 pb-10">
-        {/* Value props */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="space-y-3 mb-8">
-          {[
-            { icon: '🩺', title: 'Protocolos completos', sub: 'Guias detalhados passo a passo para cada sintoma' },
-            { icon: '⚡', title: 'Triagem em 2 minutos', sub: 'Descubra a urgência real do problema do seu cão' },
-            { icon: '📚', title: '100+ condições detalhadas', sub: 'Lambedura, vômito, coceira, emergências e muito mais' },
-            { icon: '✅', title: 'Checklists interativos', sub: 'Acompanhe cada etapa do tratamento em casa' },
-          ].map((item, i) => (
-            <motion.div key={i}
-              initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 + i * 0.07 }}
-              className="flex items-center gap-3 card rounded-2xl px-4 py-3.5">
-              <span className="text-2xl w-9 text-center">{item.icon}</span>
-              <div>
-                <p className="font-semibold text-sm" style={{ color: 'var(--text1)' }}>{item.title}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text3)' }}>{item.sub}</p>
+      <div className="flex-1 flex items-center justify-center px-5 py-8">
+        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}
+                    className="w-full max-w-sm">
+          {/* Card */}
+          <div className="rounded-3xl overflow-hidden shadow-xl" style={{ background: '#fff', border: '1px solid #E2E8F0', boxShadow: '0 20px 50px rgba(15,23,42,0.10)' }}>
+            {/* Hero header */}
+            <div className="relative px-7 pt-9 pb-8 text-white overflow-hidden"
+                 style={{ background: `linear-gradient(135deg,${TEAL},${TEAL2})` }}>
+              <div className="absolute inset-0 opacity-20"
+                   style={{ backgroundImage: 'radial-gradient(circle at 25% 20%, #fff 0%, transparent 50%), radial-gradient(circle at 80% 90%, #fff 0%, transparent 45%)' }} />
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-3xl mb-4 shadow-lg">🐾</div>
+                <h1 className="text-2xl font-extrabold tracking-tight">Bem-vindo de volta</h1>
+                <p className="text-white/85 text-sm mt-1">Acesse sua conta e cuide do seu cão com segurança.</p>
               </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Form */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
-          <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text1)' }}>Acessar minha conta</h2>
-          <p className="text-sm mb-5" style={{ color: 'var(--text3)' }}>Use o e-mail cadastrado na sua compra na Hotmart</p>
-
-          <form onSubmit={handleLogin} className="space-y-3">
-            <div className="relative">
-              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--text4)' }} />
-              <input
-                type="email" value={email}
-                onChange={e => { setEmail(e.target.value); setError(''); }}
-                placeholder="seu@email.com"
-                className="inp pl-10"
-                autoComplete="email" inputMode="email"
-              />
             </div>
-            {error && <p className="text-xs ml-1" style={{ color: 'var(--red)' }}>{error}</p>}
-            <button
-              type="submit" disabled={loading || !email}
-              className="w-full g-teal text-white font-semibold py-4 rounded-2xl text-sm disabled:opacity-40 flex items-center justify-center gap-2 shadow-lg shadow-teal-600/25 press"
-            >
-              {loading
-                ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Entrando...</>
-                : <>Entrar no App <ArrowRight size={16} /></>
-              }
-            </button>
-          </form>
 
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <ShieldCheck size={13} style={{ color: 'var(--text4)' }} />
-            <p className="text-xs" style={{ color: 'var(--text4)' }}>Acesso exclusivo para assinantes Hotmart</p>
+            {/* Form */}
+            <div className="px-7 py-7">
+              <form onSubmit={handleLogin} className="space-y-3">
+                <label className="block text-xs font-semibold mb-1" style={{ color: '#64748B' }}>
+                  E-mail da sua compra
+                </label>
+                <div className="relative">
+                  <Mail size={17} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: '#94A3B8' }} />
+                  <input
+                    type="email" value={email}
+                    onChange={e => { setEmail(e.target.value); setError(''); }}
+                    placeholder="seu@email.com"
+                    autoComplete="email" inputMode="email"
+                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl text-sm outline-none transition"
+                    style={{ background: '#F8FAFC', border: `1.5px solid ${error ? '#EF4444' : '#E2E8F0'}`, color: '#0F172A' }}
+                    onFocus={e => { if (!error) e.currentTarget.style.borderColor = TEAL; }}
+                    onBlur={e => { if (!error) e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                  />
+                </div>
+                {error && <p className="text-xs ml-1" style={{ color: '#EF4444' }}>{error}</p>}
+
+                <button
+                  type="submit" disabled={loading || !email}
+                  className="w-full text-white font-bold py-4 rounded-2xl text-sm disabled:opacity-40 flex items-center justify-center gap-2 press"
+                  style={{ background: `linear-gradient(135deg,${TEAL},${TEAL2})`, boxShadow: `0 10px 24px ${TEAL}40` }}
+                >
+                  {loading
+                    ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Entrando...</>
+                    : <>Entrar no app <ArrowRight size={16} /></>}
+                </button>
+              </form>
+
+              <div className="flex items-center justify-center gap-1.5 mt-5">
+                <ShieldCheck size={13} style={{ color: '#94A3B8' }} />
+                <p className="text-xs" style={{ color: '#94A3B8' }}>Acesso exclusivo para assinantes</p>
+              </div>
+            </div>
           </div>
+
+          {/* Mini value props */}
+          <div className="grid grid-cols-2 gap-2 mt-5">
+            {PROOF.map(p => (
+              <div key={p} className="flex items-center gap-1.5 text-xs" style={{ color: '#475569' }}>
+                <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ background: `${TEAL}1a`, color: TEAL }}>
+                  <Check size={10} strokeWidth={3} />
+                </span>
+                {p}
+              </div>
+            ))}
+          </div>
+
+          {/* No access yet */}
+          <p className="text-center text-sm mt-6" style={{ color: '#64748B' }}>
+            Ainda não tem acesso?{' '}
+            <Link to="/quiz" className="font-semibold" style={{ color: TEAL }}>Comece aqui →</Link>
+          </p>
         </motion.div>
       </div>
     </div>
