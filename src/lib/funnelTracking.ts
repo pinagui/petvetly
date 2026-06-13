@@ -7,7 +7,7 @@
    endpoint seu (Zapier, Make, Google Apps Script, Supabase etc.).
    Cada evento/lead será enviado via POST JSON para esse endpoint.
    ════════════════════════════════════════════════════════════════════ */
-export const WEBHOOK_URL = 'https://tjazborroacelmzegttf.supabase.co/functions/v1/pv-funnel';
+export const WEBHOOK_URL = 'https://tjazborroacelmzegttf.supabase.co/functions/v1/hotmart-webhook';
 
 const SS_UTM = 'pv_utm';
 const LS_EVENTS = 'pv_events';
