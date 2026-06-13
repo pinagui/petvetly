@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { verifyAccess } from '../lib/funnelTracking';
 
 interface Pet {
   name: string;
@@ -42,10 +43,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string) => {
-    // In production: validate against Hotmart webhook data
+    // Valida contra a base de compras da Hotmart (somente quem comprou entra)
+    const { ok, name } = await verifyAccess(email);
+    if (!ok) {
+      const err = new Error('no_access') as Error & { code?: string };
+      err.code = 'no_access';
+      throw err;
+    }
     const newUser: User = {
       email,
-      name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+      name: (name && name !== 'Admin')
+        ? name
+        : email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
       pet: null,
     };
     setUser(newUser);

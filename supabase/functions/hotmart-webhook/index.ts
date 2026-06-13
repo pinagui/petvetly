@@ -64,6 +64,31 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ── 0b) Verifica se o e-mail tem compra ativa (libera login do app) ──
+  if (body.action === 'verify_access') {
+    const email = (body.email as string ?? '').trim().toLowerCase();
+    if (!email) return json({ ok: false }, 200);
+
+    // E-mail do dono sempre liberado (testes)
+    const OWNER = (Deno.env.get('PV_OWNER_EMAIL') ?? 'guilhermepinaramos@gmail.com').toLowerCase();
+    if (email === OWNER) return json({ ok: true, name: 'Admin' });
+
+    try {
+      const { data } = await supabase
+        .from('hotmart_purchases')
+        .select('status, name')
+        .eq('email', email)
+        .maybeSingle();
+
+      // status que liberam acesso (compra aprovada / assinatura ativa)
+      const ACTIVE = ['APPROVED', 'COMPLETE', 'COMPLETED', 'APROVADO', 'ACTIVE'];
+      const ok = !!data && ACTIVE.includes(String(data.status ?? '').toUpperCase());
+      return json({ ok, name: data?.name ?? null });
+    } catch (err) {
+      return json({ ok: false, error: String(err) }, 500);
+    }
+  }
+
   // ── 1) Eventos/leads do próprio funil (enviados pelo navegador) ──
   const type = body.type as string | undefined;
   if (type === 'lead' || type === 'event') {

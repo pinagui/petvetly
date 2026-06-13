@@ -124,6 +124,18 @@ export function clearAllData() {
   localStorage.removeItem(LS_LEADS);
 }
 
+/* ── verifica se o e-mail tem compra ativa (libera login do app) ── */
+export async function verifyAccess(email: string): Promise<{ ok: boolean; name?: string | null }> {
+  if (!WEBHOOK_URL) return { ok: false };
+  const res = await fetch(WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'verify_access', email }),
+  });
+  if (!res.ok) throw new Error('verify_failed');
+  return res.json();
+}
+
 /* ── busca leads/eventos do Supabase para o painel /admin ── */
 export async function fetchAdminData(password: string): Promise<{ leads: Lead[]; events: FunnelEvent[] }> {
   if (!WEBHOOK_URL) throw new Error('WEBHOOK_URL não configurado');
