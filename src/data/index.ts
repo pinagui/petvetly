@@ -158,6 +158,7 @@ export const allCategories: Category[] = [
   catArticulacoes,
   catOrtopedia2,
   catColuna,
+  catHernia,
   catRacasCondrodistroficas,
   catFisioterapia,
   catReabilitacao,
