@@ -1,0 +1,17 @@
+{
+  "name": "PetVetly — Veterinário 24h",
+  "short_name": "PetVetly",
+  "description": "Protocolos veterinários, triagem de sintomas e checklists para cuidar do seu cão em casa.",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D9488",
+  "theme_color": "#0D9488",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

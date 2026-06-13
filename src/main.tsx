@@ -17,3 +17,18 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>,
 )
+
+// PWA — registra o service worker (habilita instalação do app)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* sem PWA */ });
+  });
+}
+
+// Captura o prompt de instalação assim que o navegador disponibiliza
+// (pode disparar antes do React montar) e guarda para a tela /obrigado usar.
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  (window as unknown as { __pvInstallPrompt?: Event }).__pvInstallPrompt = e;
+  window.dispatchEvent(new Event('pv-installable'));
+});
