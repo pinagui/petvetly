@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Check, ChevronLeft, ShieldCheck, Clock, Sparkles, Gift } from 'lucide-react';
@@ -9,8 +10,8 @@ import { fbqTrack } from '../lib/pixel';
    CONFIGURAÇÃO — troque pelos seus links de checkout da Hotmart
    ════════════════════════════════════════════════════════════════════ */
 const CHECKOUT_PROTOCOLO = 'https://pay.hotmart.com/G106054137K';           // R$ 97 — Método Patas Saudáveis
-const CHECKOUT_APP_MENSAL = 'https://pay.hotmart.com/J106307416B?off=u7b0kisi'; // R$ 27,90/mês — PetVetly completo
-const CHECKOUT_APP_ANUAL  = 'https://pay.hotmart.com/J106307416B?off=4bf7rjdg'; // R$ 147/ano — PetVetly completo anual
+const CHECKOUT_APP_MENSAL = 'https://pay.hotmart.com/J106307416B?off=u7b0kisi'; // R$ 14,90/mês — PetVetly completo
+const CHECKOUT_APP_ANUAL = 'https://pay.hotmart.com/J106307416B?off=4bf7rjdg'; // R$ 67/ano — PetVetly completo anual
 /* Foto da Dra. Ana: salve a imagem como  public/dra-ana.jpg  */
 const FOTO_DRA = '/dra-ana.jpg';
 
@@ -180,22 +181,27 @@ interface QDef {
 type Answers = Record<string, string | string[]>;
 
 const QUESTIONS: QDef[] = [
-  { id: 'q1', section: 1, title: 'Com que frequência, nos últimos 30 dias, você percebeu seu cachorro lambendo as patas?',
+  {
+    id: 'q1', section: 1, title: 'Com que frequência, nos últimos 30 dias, você percebeu seu cachorro lambendo as patas?',
     options: [
       { emoji: '🌤️', label: 'Umas 2-3 vezes na semana, pelo menos.', value: 'raro' },
       { emoji: '⏱️', label: 'Quase todo dia, mas por pouco tempo.', value: 'quase' },
       { emoji: '📅', label: 'Todo dia. Por vários minutos.', value: 'diario' },
       { emoji: '⏰', label: 'Todo dia. Horas. Parece que não para.', value: 'horas' },
       { emoji: '🌙', label: 'Ele acorda de madrugada para lamber.', value: 'madrugada' },
-    ]},
-  { id: 'q2', section: 1, title: 'Quando ele lambe, qual a intensidade?',
+    ]
+  },
+  {
+    id: 'q2', section: 1, title: 'Quando ele lambe, qual a intensidade?',
     options: [
       { emoji: '😌', label: 'Lambidas leves. Parece mais um hábito.', value: 'leve' },
       { emoji: '😯', label: 'Lambidas constantes. Ele fica focado naquilo.', value: 'constante' },
       { emoji: '😟', label: 'Ele lambe com força. Dá para ouvir de longe.', value: 'forte' },
       { emoji: '😰', label: 'Ele morde a pata junto. Não é só lamber.', value: 'morde' },
-    ]},
-  { id: 'q3', section: 1, title: 'Qual pata ele mais lambe?',
+    ]
+  },
+  {
+    id: 'q3', section: 1, title: 'Qual pata ele mais lambe?',
     options: [
       { emoji: '🐾', label: 'Dianteira direita', value: 'dd' },
       { emoji: '🐾', label: 'Dianteira esquerda', value: 'de' },
@@ -203,8 +209,10 @@ const QUESTIONS: QDef[] = [
       { emoji: '🐾', label: 'Traseira esquerda', value: 'te' },
       { emoji: '🔄', label: 'Mais de uma. Alterna.', value: 'alterna' },
       { emoji: '🐕', label: 'Todas as 4.', value: 'todas' },
-    ]},
-  { id: 'q4', section: 1, title: 'Qual a aparência da pata do seu cachorro NESTE MOMENTO?',
+    ]
+  },
+  {
+    id: 'q4', section: 1, title: 'Qual a aparência da pata do seu cachorro NESTE MOMENTO?',
     options: [
       { emoji: '✅', label: 'Ainda normal (rosa/clara) — mas ele não para de lamber.', value: 'normal' },
       { emoji: '🟠', label: 'Pelo um pouco escurecido (tom ferrugem).', value: 'ferrugem' },
@@ -212,8 +220,10 @@ const QUESTIONS: QDef[] = [
       { emoji: '🔴', label: 'Vermelha.', value: 'vermelha' },
       { emoji: '💧', label: 'Vermelha e úmida/molhada.', value: 'umida' },
       { emoji: '🩹', label: 'Com ferida aberta ou crosta.', value: 'ferida' },
-    ]},
-  { id: 'q5', section: 1, title: 'Quando você percebeu o PRIMEIRO sinal de lambedura?',
+    ]
+  },
+  {
+    id: 'q5', section: 1, title: 'Quando você percebeu o PRIMEIRO sinal de lambedura?',
     options: [
       { emoji: '🗓️', label: 'Menos de 1 semana atrás.', value: 'semana' },
       { emoji: '🗓️', label: '1-4 semanas atrás.', value: 'mes' },
@@ -221,16 +231,20 @@ const QUESTIONS: QDef[] = [
       { emoji: '🗓️', label: '3-6 meses atrás.', value: '6meses' },
       { emoji: '🗓️', label: 'Mais de 6 meses atrás.', value: 'mais6' },
       { emoji: '🤔', label: 'Não lembro. Faz muito tempo.', value: 'sempre' },
-    ]},
-  { id: 'q6', section: 2, title: 'Você já levou seu cachorro ao veterinário por causa dessa lambedura?',
+    ]
+  },
+  {
+    id: 'q6', section: 2, title: 'Você já levou seu cachorro ao veterinário por causa dessa lambedura?',
     options: [
       { emoji: '🏥', label: 'Sim, uma vez.', value: 'sim1' },
       { emoji: '🏥', label: 'Sim, 2-3 vezes.', value: 'sim2' },
       { emoji: '🏥', label: 'Sim, mais de 3 vezes.', value: 'sim3' },
       { emoji: '🤷', label: 'Ainda não, mas estou considerando.', value: 'nao_considera' },
       { emoji: '🏠', label: 'Não. Prefiro tentar resolver sozinho antes.', value: 'nao' },
-    ]},
-  { id: 'q7', section: 2, title: 'O que o veterinário disse?',
+    ]
+  },
+  {
+    id: 'q7', section: 2, title: 'O que o veterinário disse?',
     showIf: a => typeof a.q6 === 'string' && a.q6.startsWith('sim'),
     options: [
       { emoji: '😰', label: 'Disse que era ansiedade.', value: 'ansiedade' },
@@ -239,8 +253,10 @@ const QUESTIONS: QDef[] = [
       { emoji: '🔁', label: 'Disse que era mania/comportamental.', value: 'mania' },
       { emoji: '❓', label: 'Não deu um diagnóstico claro.', value: 'sem_diag' },
       { emoji: '💊', label: 'Passou remédio e não explicou direito.', value: 'remedio' },
-    ]},
-  { id: 'q8', section: 2, title: 'O que você já tentou para resolver?', sub: 'Pode marcar mais de um', multi: true,
+    ]
+  },
+  {
+    id: 'q8', section: 2, title: 'O que você já tentou para resolver?', sub: 'Pode marcar mais de um', multi: true,
     options: [
       { emoji: '🧴', label: 'Spray antilambedura', value: 'spray' },
       { emoji: '🩹', label: 'Pomada ou creme', value: 'pomada' },
@@ -249,16 +265,20 @@ const QUESTIONS: QDef[] = [
       { emoji: '🛁', label: 'Shampoo veterinário', value: 'shampoo' },
       { emoji: '💊', label: 'Ansiolítico ou calmante', value: 'calmante' },
       { emoji: '👀', label: 'Nada ainda. Só observando.', value: 'nada' },
-    ]},
-  { id: 'q9', section: 2, title: 'O que aconteceu depois que você tentou essas coisas?',
+    ]
+  },
+  {
+    id: 'q9', section: 2, title: 'O que aconteceu depois que você tentou essas coisas?',
     showIf: a => Array.isArray(a.q8) && !(a.q8.length === 1 && a.q8[0] === 'nada'),
     options: [
       { emoji: '↩️', label: 'Melhorou por alguns dias, depois voltou.', value: 'voltou' },
       { emoji: '😑', label: 'Não fez diferença nenhuma.', value: 'nada' },
       { emoji: '📉', label: 'Melhorou enquanto usava, piorou depois.', value: 'piorou' },
       { emoji: '😅', label: 'Não consegui aplicar direito.', value: 'nao_aplicou' },
-    ]},
-  { id: 'q10', section: 3, title: 'Existe algum HORÁRIO específico em que ele lambe mais?',
+    ]
+  },
+  {
+    id: 'q10', section: 3, title: 'Existe algum HORÁRIO específico em que ele lambe mais?',
     options: [
       { emoji: '🌅', label: 'Manhã (ao acordar)', value: 'manha' },
       { emoji: '☀️', label: 'Tarde', value: 'tarde' },
@@ -267,8 +287,10 @@ const QUESTIONS: QDef[] = [
       { emoji: '🏠', label: 'Depois de eu chegar do trabalho', value: 'chegada' },
       { emoji: '🚪', label: 'Depois de eu sair de casa', value: 'saida' },
       { emoji: '🤷', label: 'Não tem horário fixo', value: 'sem_horario' },
-    ]},
-  { id: 'q11', section: 3, title: 'O que acontece POUCO ANTES de ele começar a lamber?', sub: 'Pode marcar mais de um', multi: true,
+    ]
+  },
+  {
+    id: 'q11', section: 3, title: 'O que acontece POUCO ANTES de ele começar a lamber?', sub: 'Pode marcar mais de um', multi: true,
     options: [
       { emoji: '🚪', label: 'Eu saio de casa', value: 'saio' },
       { emoji: '🔑', label: 'Eu chego em casa', value: 'chego' },
@@ -278,16 +300,20 @@ const QUESTIONS: QDef[] = [
       { emoji: '🎆', label: 'Tem barulho alto (fogos, obra)', value: 'barulho' },
       { emoji: '🐕', label: 'Fica sozinho', value: 'sozinho' },
       { emoji: '❓', label: 'Não consigo identificar o que acontece antes', value: 'nao_sei' },
-    ]},
-  { id: 'q12', section: 3, title: 'Onde seu cachorro passa a maior parte do dia?',
+    ]
+  },
+  {
+    id: 'q12', section: 3, title: 'Onde seu cachorro passa a maior parte do dia?',
     options: [
       { emoji: '🛋️', label: 'Dentro de casa, no tapete/sofá.', value: 'tapete' },
       { emoji: '🧊', label: 'Dentro de casa, no piso frio (cerâmica/madeira).', value: 'piso' },
       { emoji: '🌱', label: 'No quintal, com acesso à terra/grama.', value: 'quintal_terra' },
       { emoji: '🧱', label: 'No quintal, com piso cimentado.', value: 'quintal_cimento' },
       { emoji: '🏢', label: 'Apartamento. Só sai para passear.', value: 'ape' },
-    ]},
-  { id: 'q13', section: 3, title: 'Qual produto você usa para limpar o chão de casa?',
+    ]
+  },
+  {
+    id: 'q13', section: 3, title: 'Qual produto você usa para limpar o chão de casa?',
     options: [
       { emoji: '🫧', label: 'Água e sabão neutro.', value: 'neutro' },
       { emoji: '🧴', label: 'Produto de limpeza comum (pinho, cloro, veja).', value: 'comum' },
@@ -295,8 +321,10 @@ const QUESTIONS: QDef[] = [
       { emoji: '⚠️', label: 'Água sanitária.', value: 'sanitaria' },
       { emoji: '🤷', label: 'Não sei. Outra pessoa limpa.', value: 'nao_sei' },
       { emoji: '💧', label: 'Passo só pano úmido, sem produto.', value: 'pano' },
-    ]},
-  { id: 'q14', section: 3, title: 'Além da lambedura, seu cachorro apresenta algum desses comportamentos?', sub: 'Pode marcar mais de um', multi: true,
+    ]
+  },
+  {
+    id: 'q14', section: 3, title: 'Além da lambedura, seu cachorro apresenta algum desses comportamentos?', sub: 'Pode marcar mais de um', multi: true,
     options: [
       { emoji: '😣', label: 'Se coça muito em outras partes do corpo.', value: 'coca' },
       { emoji: '🔄', label: 'Se esfrega no chão ou na parede.', value: 'esfrega' },
@@ -304,24 +332,30 @@ const QUESTIONS: QDef[] = [
       { emoji: '😔', label: 'Está mais quieto, apático.', value: 'apatico' },
       { emoji: '😰', label: 'Está ansioso (anda de um lado para o outro).', value: 'ansioso' },
       { emoji: '🐾', label: 'Não — o problema principal é a lambedura mesmo.', value: 'so_lambedura' },
-    ]},
-  { id: 'q15', section: 4, title: 'Qual dessas frases descreve MELHOR o que você sente sobre essa situação agora?',
+    ]
+  },
+  {
+    id: 'q15', section: 4, title: 'Qual dessas frases descreve MELHOR o que você sente sobre essa situação agora?',
     options: [
       { emoji: '😮‍💨', label: 'Estou cansada de tentar e não resolver.', value: 'cansada' },
       { emoji: '⏳', label: 'Estou preocupada de estar perdendo tempo.', value: 'preocupada' },
       { emoji: '😨', label: 'Estou com medo de virar algo grave.', value: 'medo' },
       { emoji: '💸', label: 'Estou frustrada por gastar dinheiro à toa.', value: 'frustrada' },
       { emoji: '🌀', label: 'Estou confusa. Não sei mais o que fazer.', value: 'confusa' },
-    ]},
-  { id: 'q16', section: 4, title: 'Se essa lambedura não resolver nos próximos 30 dias, o que MAIS te preocupa?',
+    ]
+  },
+  {
+    id: 'q16', section: 4, title: 'Se essa lambedura não resolver nos próximos 30 dias, o que MAIS te preocupa?',
     options: [
       { emoji: '💸', label: 'Gastar mais dinheiro sem resultado.', value: 'dinheiro' },
       { emoji: '🏥', label: 'A pata infeccionar e precisar de cirurgia.', value: 'cirurgia' },
       { emoji: '💔', label: 'Meu cachorro sofrer à toa.', value: 'sofrer' },
       { emoji: '⏰', label: 'Não conseguir mais resolver porque deixei tempo demais passar.', value: 'tempo' },
       { emoji: '😞', label: 'Me sentir uma tutora negligente.', value: 'culpa' },
-    ]},
-  { id: 'q17', section: 4, title: 'Aproximadamente, quanto você já gastou tentando resolver essa lambedura até hoje?',
+    ]
+  },
+  {
+    id: 'q17', section: 4, title: 'Aproximadamente, quanto você já gastou tentando resolver essa lambedura até hoje?',
     options: [
       { emoji: '💵', label: 'Menos de R$100.', value: '100' },
       { emoji: '💵', label: 'Entre R$100 e R$300.', value: '300' },
@@ -329,13 +363,16 @@ const QUESTIONS: QDef[] = [
       { emoji: '💰', label: 'Entre R$600 e R$1.000.', value: '1000' },
       { emoji: '🤯', label: 'Mais de R$1.000.', value: 'mais1000' },
       { emoji: '🙈', label: 'Não sei. Não somei. Prefiro não saber.', value: 'nao_sei' },
-    ]},
-  { id: 'q18', section: 4, title: 'Se existisse um protocolo que mapeia exatamente o gatilho da lambedura do SEU CACHORRO e te dá um passo a passo para resolver, você estaria disposto a seguir?',
+    ]
+  },
+  {
+    id: 'q18', section: 4, title: 'Se existisse um protocolo que mapeia exatamente o gatilho da lambedura do SEU CACHORRO e te dá um passo a passo para resolver, você estaria disposto a seguir?',
     options: [
       { emoji: '💪', label: 'Sim. Só quero algo que funcione.', value: 'sim' },
       { emoji: '⏱️', label: 'Sim, mas precisa ser prático. Não tenho muito tempo.', value: 'sim_pratico' },
       { emoji: '🎯', label: 'Sim, desde que seja para o caso específico do MEU cachorro.', value: 'sim_especifico' },
-    ]},
+    ]
+  },
 ];
 
 /* marcos gamificados entre seções */
@@ -453,7 +490,7 @@ function DraAvatar({ size = 64 }: { size?: number }) {
   if (failed) {
     return (
       <div className="g-teal rounded-full flex items-center justify-center shrink-0 shadow-lg"
-           style={{ width: size, height: size }}>
+        style={{ width: size, height: size }}>
         <span style={{ fontSize: size * 0.45 }}>👩‍⚕️</span>
       </div>
     );
@@ -471,10 +508,23 @@ function DraAvatar({ size = 64 }: { size?: number }) {
    ════════════════════════════════════════════════════════════════════ */
 type Phase = 'landing' | 'quiz' | 'milestone' | 'lead' | 'analyzing' | 'result';
 
+/* Respostas padrão usadas no modo preview (?preview=result) */
+const PREVIEW_ANSWERS: Answers = {
+  q1: 'diario', q2: 'forte', q3: 'alterna', q4: 'ferrugem',
+  q5: '3meses', q6: 'sim2', q7: 'alergia',
+  q8: ['spray', 'pomada'], q9: 'voltou',
+  q10: 'noite', q11: ['sozinho', 'saio'], q12: 'tapete',
+  q13: 'comum', q14: ['coca', 'ansioso'],
+  q15: 'cansada', q16: 'sofrer', q17: '300', q18: 'sim',
+};
+
 export default function QuizFunnelScreen() {
-  const [answers, setAnswers] = useState<Answers>({});
+  const [searchParams] = useSearchParams();
+  const isPreview = searchParams.get('preview') === 'result';
+
+  const [answers, setAnswers] = useState<Answers>(isPreview ? PREVIEW_ANSWERS : {});
   const [stepIdx, setStepIdx] = useState(0);
-  const [phase, setPhase] = useState<Phase>('landing');
+  const [phase, setPhase] = useState<Phase>(isPreview ? 'result' : 'landing');
   const [multiSel, setMultiSel] = useState<string[]>([]);
   const [milestone, setMilestone] = useState<number | null>(null);
   const [kibbleBurst, setKibbleBurst] = useState(0);
@@ -528,7 +578,7 @@ export default function QuizFunnelScreen() {
 
   const advance = (next: Answers) => {
     celebrate();
-    track('q_answered', { q: q.id, step: stepIdx + 1 });
+    track('q_answered', { q: q.id, step: stepIdx + 1, value: next[q.id] });
     setAnswers(next);
     const newVisible = QUESTIONS.filter(qq => !qq.showIf || qq.showIf(next));
     const curPos = newVisible.findIndex(qq => qq.id === q.id);
@@ -762,8 +812,8 @@ export default function QuizFunnelScreen() {
     const { stage, paragraphs } = diagnosis;
     const stageColor = stage.n >= 4 ? 'bg-red-50 border-red-200 text-red-700'
       : stage.n === 3 ? 'bg-orange-50 border-orange-200 text-orange-700'
-      : stage.n === 2 ? 'bg-amber-50 border-amber-200 text-amber-700'
-      : 'bg-emerald-50 border-emerald-200 text-emerald-700';
+        : stage.n === 2 ? 'bg-amber-50 border-amber-200 text-amber-700'
+          : 'bg-emerald-50 border-emerald-200 text-emerald-700';
 
     return (
       <div className="h-full overflow-y-auto no-scroll" style={LIGHT}>
@@ -890,34 +940,7 @@ export default function QuizFunnelScreen() {
             </ul>
           </motion.div>
 
-          {/* ── OFERTA 1: Método Patas Saudáveis ── */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-            className="rounded-3xl p-6 bg-white" style={{ border: '1px solid #E0E0E6', boxShadow: '0 2px 12px rgba(0,0,0,.06)' }}>
-            <div className="flex items-center gap-2.5 mb-1">
-              <Emoji3D e="🐾" size={28} />
-              <h2 className="font-bold text-lg" style={{ color: '#1C1C1E' }}>Método Patas Saudáveis</h2>
-            </div>
-            <p className="text-sm mb-4" style={{ color: '#5A5A60' }}>
-              O passo a passo da Dra. Ana Paula para quebrar o Ciclo da Pata Vermelha.
-            </p>
-            <ul className="space-y-2 mb-5">
-              <li className="flex items-start gap-2 text-sm" style={{ color: '#3A3A40' }}>
-                <Check size={16} className="text-emerald-500 shrink-0 mt-0.5" />
-                Mapa de Padrão em 3 dias — identifica se o gatilho é ambiental, alimentar ou comportamental
-              </li>
-            </ul>
-            <div className="flex items-baseline gap-2 mb-4">
-              <span className="text-3xl font-bold" style={{ color: '#1C1C1E' }}>R$ 97</span>
-              <span className="text-sm" style={{ color: '#7A7A82' }}>pagamento único · acesso imediato</span>
-            </div>
-            <a href={checkoutUrl(CHECKOUT_PROTOCOLO)}
-              onClick={() => { track('checkout_click', { offer: 'protocolo' }); fbqTrack('InitiateCheckout', { content_name: 'protocolo', value: 97, currency: 'BRL' }); }}
-              className="block w-full g-teal text-white font-bold py-4 rounded-2xl text-sm text-center shadow-lg shadow-teal-600/25 press">
-              QUERO O MÉTODO COMPLETO <ArrowRight size={15} className="inline ml-1" />
-            </a>
-          </motion.div>
-
-          {/* ── OFERTA 2: App completo (stack de valor) — DESTAQUE ── */}
+          {/* ── OFERTA PRINCIPAL: App completo (stack de valor) — DESTAQUE ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{
@@ -928,17 +951,17 @@ export default function QuizFunnelScreen() {
               ],
             }}
             transition={{
-              opacity: { delay: 0.5 }, y: { delay: 0.5 },
+              opacity: { delay: 0.35 }, y: { delay: 0.35 },
               boxShadow: { repeat: Infinity, duration: 1.8, ease: 'easeOut' },
             }}
             className="rounded-3xl p-6 relative overflow-visible bg-white border-2"
             style={{ borderColor: '#0D9488' }}>
-            <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full">
-              MELHOR CUSTO-BENEFÍCIO
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[11px] font-extrabold px-4 py-1.5 rounded-full shadow-md whitespace-nowrap tracking-wide">
+              ⭐ MELHOR ESCOLHA — MAIS COMPLETO
             </div>
-            <div className="flex items-center gap-2.5 mb-1">
-              <Emoji3D e="📱" size={28} />
-              <h2 className="font-bold text-lg" style={{ color: '#1C1C1E' }}>PetVetly Completo</h2>
+            <div className="flex items-center gap-2.5 mb-1 mt-3">
+              <Emoji3D e="📱" size={32} />
+              <h2 className="font-extrabold text-xl" style={{ color: '#1C1C1E' }}>PetVetly Completo</h2>
             </div>
             <p className="text-sm mb-4" style={{ color: '#5A5A60' }}>
               O Método Patas Saudáveis + o sistema completo de saúde do seu cachorro, em um único app.
@@ -988,6 +1011,7 @@ export default function QuizFunnelScreen() {
 
             {/* seletor de plano */}
             <div className="space-y-2.5 mb-4">
+              {/* Anual */}
               <button onClick={() => setPlan('anual')}
                 className="w-full rounded-2xl px-4 py-4 flex items-center gap-3 text-left press relative"
                 style={plan === 'anual'
@@ -998,16 +1022,18 @@ export default function QuizFunnelScreen() {
                   {plan === 'anual' && <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#0D9488' }} />}
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-bold text-sm" style={{ color: '#1C1C1E' }}>Plano Anual</p>
-                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">ECONOMIZE 56%</span>
+                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">ECONOMIZE 53%</span>
                   </div>
                   <p className="text-xs mt-0.5" style={{ color: '#5A5A60' }}>
-                    <span className="line-through">R$ 334,80</span>{' '}
-                    <strong style={{ color: '#0D9488' }}>R$ 147/ano</strong> — equivale a R$ 12,25/mês
+                    <span className="line-through">R$ 178,80</span>{' '}
+                    <strong style={{ color: '#0D9488' }}>R$ 67/ano</strong>
+                    {' '}— equivale a <strong style={{ color: '#0D9488' }}>R$ 5,58/mês</strong>
                   </p>
                 </div>
               </button>
+              {/* Mensal */}
               <button onClick={() => setPlan('mensal')}
                 className="w-full rounded-2xl px-4 py-4 flex items-center gap-3 text-left press"
                 style={plan === 'mensal'
@@ -1020,20 +1046,38 @@ export default function QuizFunnelScreen() {
                 <div className="flex-1">
                   <p className="font-bold text-sm" style={{ color: '#1C1C1E' }}>Plano Mensal</p>
                   <p className="text-xs mt-0.5" style={{ color: '#5A5A60' }}>
-                    <span className="line-through">R$ 97</span>{' '}
-                    <strong style={{ color: '#0D9488' }}>R$ 27,90/mês</strong>
+                    <strong style={{ color: '#0D9488' }}>R$ 14,90/mês</strong>
+                    {' '}— cancela quando quiser
                   </p>
                 </div>
               </button>
             </div>
 
-            <p className="text-xs mb-4" style={{ color: '#7A7A82' }}>Cancela quando quiser. Sem fidelidade.</p>
             <a href={checkoutUrl(plan === 'anual' ? CHECKOUT_APP_ANUAL : CHECKOUT_APP_MENSAL)}
-              onClick={() => { const isAnual = plan === 'anual'; track('checkout_click', { offer: isAnual ? 'app_anual' : 'app_mensal' }); fbqTrack('InitiateCheckout', { content_name: isAnual ? 'app_anual' : 'app_mensal', value: isAnual ? 147 : 27.90, currency: 'BRL' }); }}
-              className="block w-full font-bold py-4 rounded-2xl text-sm text-center press text-white"
-              style={{ background: 'linear-gradient(135deg, #f59e0b, #ea580c)', boxShadow: '0 8px 24px rgba(234,88,12,0.25)' }}>
-              QUERO O APP COMPLETO + BÔNUS {plan === 'anual' ? '(R$ 147/ANO)' : '(R$ 27,90/MÊS)'} <ArrowRight size={15} className="inline ml-1" />
+              onClick={() => { const isAnual = plan === 'anual'; track('checkout_click', { offer: isAnual ? 'app_anual' : 'app_mensal' }); fbqTrack('InitiateCheckout', { content_name: isAnual ? 'app_anual' : 'app_mensal', value: isAnual ? 67 : 14.90, currency: 'BRL' }); }}
+              className="block w-full font-extrabold py-4 rounded-2xl text-sm text-center press text-white"
+              style={{ background: 'linear-gradient(135deg, #f59e0b, #ea580c)', boxShadow: '0 8px 24px rgba(234,88,12,0.30)', fontSize: '15px' }}>
+              QUERO O APP COMPLETO + BÔNUS {plan === 'anual' ? '(R$ 67/ANO)' : '(R$ 14,90/MÊS)'} <ArrowRight size={15} className="inline ml-1" />
             </a>
+            <p className="text-xs text-center mt-2" style={{ color: '#7A7A82' }}>Cancela quando quiser. Sem fidelidade.</p>
+          </motion.div>
+
+          {/* ── OFERTA SECUNDÁRIA: Método Patas Saudáveis — discreta ── */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
+            className="rounded-2xl px-5 py-4"
+            style={{ background: '#FAFAFA', border: '1px solid #EBEBEB' }}>
+            <p className="text-[11px] font-semibold mb-1" style={{ color: '#9A9AA2' }}>Prefere só o protocolo?</p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs leading-snug" style={{ color: '#AEAEB2' }}>
+                Método Patas Saudáveis — acesso avulso, pagamento único.
+              </p>
+              <a href={checkoutUrl(CHECKOUT_PROTOCOLO)}
+                onClick={() => { track('checkout_click', { offer: 'protocolo' }); fbqTrack('InitiateCheckout', { content_name: 'protocolo', value: 97, currency: 'BRL' }); }}
+                className="shrink-0 text-[11px] font-semibold px-3 py-1.5 rounded-xl press"
+                style={{ color: '#9A9AA2', background: '#F0F0F0', border: '1px solid #E0E0E0' }}>
+                R$ 97
+              </a>
+            </div>
           </motion.div>
 
           {/* Garantia */}
@@ -1116,9 +1160,9 @@ export default function QuizFunnelScreen() {
                       <span className="flex-1 font-medium text-sm leading-snug" style={{ color: '#1C1C1E' }}>{opt.label}</span>
                       {q.multi
                         ? <div className="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0"
-                            style={{ borderColor: selected ? '#0D9488' : '#D1D1D6', background: selected ? '#0D9488' : 'transparent' }}>
-                            {selected && <Check size={13} className="text-white" />}
-                          </div>
+                          style={{ borderColor: selected ? '#0D9488' : '#D1D1D6', background: selected ? '#0D9488' : 'transparent' }}>
+                          {selected && <Check size={13} className="text-white" />}
+                        </div>
                         : <ArrowRight size={15} className="shrink-0" style={{ color: '#9A9AA2' }} />
                       }
                     </motion.button>

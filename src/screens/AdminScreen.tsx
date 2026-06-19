@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { BarChart3, Download, Lock, LogOut, RefreshCw, Users, ShoppingBag } from 'lucide-react';
+import { BarChart3, Download, Lock, LogOut, RefreshCw, Users, ShoppingBag, MessageSquare } from 'lucide-react';
 import { leadsToCSV, fetchAdminData } from '../lib/funnelTracking';
 import type { FunnelEvent, Lead, Purchase } from '../lib/funnelTracking';
 
@@ -23,8 +23,8 @@ const FUNNEL_STEPS = [
   { key: 'lead_captured', label: 'Deixou contato (LEAD)' },
   { key: 'result_view', label: 'Viu o diagnóstico' },
   { key: 'checkout_click_protocolo', label: 'Clicou — Método R$97' },
-  { key: 'checkout_click_app_mensal', label: 'Clicou — App Mensal R$27,90' },
-  { key: 'checkout_click_app_anual', label: 'Clicou — App Anual R$147' },
+  { key: 'checkout_click_app_mensal', label: 'Clicou — App Mensal R$14,90' },
+  { key: 'checkout_click_app_anual', label: 'Clicou — App Anual R$67' },
 ];
 
 function stepOfEvent(ev: FunnelEvent): string | null {
@@ -38,7 +38,102 @@ export default function AdminScreen() {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [err, setErr] = useState('');
-  const [tab, setTab] = useState<'funil' | 'leads' | 'vendas' | 'campanhas'>('funil');
+  const [tab, setTab] = useState<'funil' | 'leads' | 'vendas' | 'campanhas' | 'respostas'>('funil');
+
+  /* mapa de perguntas inline para o admin — igual ao QuizFunnelScreen */
+  const QUIZ_QUESTIONS: { id: string; title: string; options: { label: string; value: string }[] }[] = [
+    { id: 'q1', title: 'Com que frequência ele lambe as patas?', options: [
+      { label: '2–3x/semana', value: 'raro' }, { label: 'Quase todo dia', value: 'quase' },
+      { label: 'Todo dia (minutos)', value: 'diario' }, { label: 'Todo dia (horas)', value: 'horas' },
+      { label: 'Acorda de madrugada', value: 'madrugada' },
+    ]},
+    { id: 'q2', title: 'Intensidade da lambedura?', options: [
+      { label: 'Leves (hábito)', value: 'leve' }, { label: 'Constantes (focado)', value: 'constante' },
+      { label: 'Com força (ouve de longe)', value: 'forte' }, { label: 'Morde junto', value: 'morde' },
+    ]},
+    { id: 'q3', title: 'Qual pata ele mais lambe?', options: [
+      { label: 'Dianteira direita', value: 'dd' }, { label: 'Dianteira esquerda', value: 'de' },
+      { label: 'Traseira direita', value: 'td' }, { label: 'Traseira esquerda', value: 'te' },
+      { label: 'Mais de uma', value: 'alterna' }, { label: 'Todas as 4', value: 'todas' },
+    ]},
+    { id: 'q4', title: 'Aparência da pata agora?', options: [
+      { label: 'Normal (rosa)', value: 'normal' }, { label: 'Tom ferrugem', value: 'ferrugem' },
+      { label: 'Bem escuro (marrom)', value: 'escuro' }, { label: 'Vermelha', value: 'vermelha' },
+      { label: 'Vermelha e úmida', value: 'umida' }, { label: 'Ferida aberta', value: 'ferida' },
+    ]},
+    { id: 'q5', title: 'Quando percebeu o primeiro sinal?', options: [
+      { label: '< 1 semana', value: 'semana' }, { label: '1–4 semanas', value: 'mes' },
+      { label: '1–3 meses', value: '3meses' }, { label: '3–6 meses', value: '6meses' },
+      { label: '> 6 meses', value: 'mais6' }, { label: 'Não lembro', value: 'sempre' },
+    ]},
+    { id: 'q6', title: 'Já foi ao vet por causa disso?', options: [
+      { label: 'Sim, 1x', value: 'sim1' }, { label: 'Sim, 2–3x', value: 'sim2' },
+      { label: 'Sim, +3x', value: 'sim3' }, { label: 'Não, mas considera', value: 'nao_considera' },
+      { label: 'Não', value: 'nao' },
+    ]},
+    { id: 'q7', title: 'O que o vet disse?', options: [
+      { label: 'Ansiedade', value: 'ansiedade' }, { label: 'Alergia', value: 'alergia' },
+      { label: 'Fungo/bactéria', value: 'fungo' }, { label: 'Mania/comportamental', value: 'mania' },
+      { label: 'Sem diagnóstico claro', value: 'sem_diag' }, { label: 'Remédio sem explicação', value: 'remedio' },
+    ]},
+    { id: 'q8', title: 'O que já tentou? (multi)', options: [
+      { label: 'Spray antilambedura', value: 'spray' }, { label: 'Pomada/creme', value: 'pomada' },
+      { label: 'Cone elizabetano', value: 'cone' }, { label: 'Troca de ração', value: 'racao' },
+      { label: 'Shampoo vet', value: 'shampoo' }, { label: 'Calmante', value: 'calmante' },
+      { label: 'Nada ainda', value: 'nada' },
+    ]},
+    { id: 'q9', title: 'O que aconteceu após tentar?', options: [
+      { label: 'Melhorou e voltou', value: 'voltou' }, { label: 'Não fez nada', value: 'nada' },
+      { label: 'Melhorou e piorou', value: 'piorou' }, { label: 'Não conseguiu aplicar', value: 'nao_aplicou' },
+    ]},
+    { id: 'q10', title: 'Horário que mais lambe?', options: [
+      { label: 'Manhã', value: 'manha' }, { label: 'Tarde', value: 'tarde' },
+      { label: 'Noite', value: 'noite' }, { label: 'Madrugada', value: 'madrugada' },
+      { label: 'Após eu chegar', value: 'chegada' }, { label: 'Após eu sair', value: 'saida' },
+      { label: 'Sem horário fixo', value: 'sem_horario' },
+    ]},
+    { id: 'q11', title: 'O que acontece antes de lamber? (multi)', options: [
+      { label: 'Eu saío', value: 'saio' }, { label: 'Eu chego', value: 'chego' },
+      { label: 'Ele come', value: 'come' }, { label: 'Volta do passeio', value: 'passeio' },
+      { label: 'Tem visita', value: 'visita' }, { label: 'Barulho alto', value: 'barulho' },
+      { label: 'Fica sozinho', value: 'sozinho' }, { label: 'Não sei', value: 'nao_sei' },
+    ]},
+    { id: 'q12', title: 'Onde passa o dia?', options: [
+      { label: 'Dentro (tapete/sofá)', value: 'tapete' }, { label: 'Dentro (piso frio)', value: 'piso' },
+      { label: 'Quintal com terra', value: 'quintal_terra' }, { label: 'Quintal cimentado', value: 'quintal_cimento' },
+      { label: 'Apartamento', value: 'ape' },
+    ]},
+    { id: 'q13', title: 'Produto para limpar o chão?', options: [
+      { label: 'Água e sabão neutro', value: 'neutro' }, { label: 'Produto comum (pinho/cloro)', value: 'comum' },
+      { label: 'Produto específico pet', value: 'pet' }, { label: 'Água sanitária', value: 'sanitaria' },
+      { label: 'Não sei', value: 'nao_sei' }, { label: 'Só pano úmido', value: 'pano' },
+    ]},
+    { id: 'q14', title: 'Outros comportamentos? (multi)', options: [
+      { label: 'Se coça em outras partes', value: 'coca' }, { label: 'Se esfrega no chão', value: 'esfrega' },
+      { label: 'Mais irritado', value: 'irritado' }, { label: 'Mais apático', value: 'apatico' },
+      { label: 'Ansioso (anda de um lado a outro)', value: 'ansioso' }, { label: 'Só a lambedura', value: 'so_lambedura' },
+    ]},
+    { id: 'q15', title: 'O que descreve melhor o que sente?', options: [
+      { label: 'Cansada de tentar', value: 'cansada' }, { label: 'Preocupada com o tempo', value: 'preocupada' },
+      { label: 'Com medo de virar grave', value: 'medo' }, { label: 'Frustrada com gastos', value: 'frustrada' },
+      { label: 'Confusa', value: 'confusa' },
+    ]},
+    { id: 'q16', title: 'O que mais te preocupa em 30 dias?', options: [
+      { label: 'Gastar mais sem resultado', value: 'dinheiro' }, { label: 'Infeccionar e precisar de cirurgia', value: 'cirurgia' },
+      { label: 'Cachorro sofrendo', value: 'sofrer' }, { label: 'Tarde demais para resolver', value: 'tempo' },
+      { label: 'Sentir-se negligente', value: 'culpa' },
+    ]},
+    { id: 'q17', title: 'Quanto já gastou tentando resolver?', options: [
+      { label: 'Menos de R$100', value: '100' }, { label: 'R$100–R$300', value: '300' },
+      { label: 'R$300–R$600', value: '600' }, { label: 'R$600–R$1.000', value: '1000' },
+      { label: 'Mais de R$1.000', value: 'mais1000' }, { label: 'Não sei', value: 'nao_sei' },
+    ]},
+    { id: 'q18', title: 'Seguiria um protocolo específico?', options: [
+      { label: 'Sim, quero que funcione', value: 'sim' },
+      { label: 'Sim, mas precisa ser prático', value: 'sim_pratico' },
+      { label: 'Sim, para o MEU cachorro', value: 'sim_especifico' },
+    ]},
+  ];
 
   const [events, setEvents] = useState<FunnelEvent[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -122,6 +217,28 @@ export default function AdminScreen() {
     const clicks = events.filter(e => e.event === 'checkout_click').length;
     return { visits: sessions.size, starts: starts.size, leads: leads.length, results: results.size, clicks };
   }, [events, leads]);
+
+  /* distribuição de respostas por pergunta */
+  const answerDist = useMemo(() => {
+    // Para cada pergunta, conta quantas sessões escolheram cada valor
+    // q_answered events: { q: 'q1', value: 'diario' } ou { q: 'q8', value: ['spray','pomada'] }
+    const dist = new Map<string, Map<string, Set<string>>>();
+    events.forEach(ev => {
+      if (ev.event !== 'q_answered') return;
+      const qId = String(ev.data?.q ?? '');
+      const raw = ev.data?.value;
+      const sid = ev.utm.session_id;
+      if (!qId) return;
+      if (!dist.has(qId)) dist.set(qId, new Map());
+      const qMap = dist.get(qId)!;
+      const values = Array.isArray(raw) ? raw as string[] : (raw ? [String(raw)] : []);
+      values.forEach(v => {
+        if (!qMap.has(v)) qMap.set(v, new Set());
+        qMap.get(v)!.add(sid);
+      });
+    });
+    return dist;
+  }, [events]);
 
   const login = async () => {
     if (email.trim().toLowerCase() !== ADMIN_EMAIL) {
@@ -252,7 +369,7 @@ export default function AdminScreen() {
 
         {/* tabs */}
         <div className="flex flex-wrap gap-2 mb-5">
-          {([['funil', 'Funil', BarChart3], ['leads', `Leads (${leads.length})`, Users], ['vendas', `Vendas (${sales.count})`, ShoppingBag], ['campanhas', 'Campanhas', BarChart3]] as const).map(([id, label, Icon]) => (
+          {([['funil', 'Funil', BarChart3], ['leads', `Leads (${leads.length})`, Users], ['vendas', `Vendas (${sales.count})`, ShoppingBag], ['campanhas', 'Campanhas', BarChart3], ['respostas', 'Respostas', MessageSquare]] as const).map(([id, label, Icon]) => (
             <button key={id} onClick={() => setTab(id)}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold press"
               style={tab === id
@@ -283,6 +400,67 @@ export default function AdminScreen() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* ── RESPOSTAS ── */}
+        {tab === 'respostas' && (
+          <div className="space-y-4">
+            <p className="text-xs font-bold tracking-widest" style={{ color: '#0D9488' }}>DISTRIBUIÇÃO DE RESPOSTAS POR PERGUNTA</p>
+            {QUIZ_QUESTIONS.map((question, qi) => {
+              const qMap = answerDist.get(question.id);
+              const totalSessions = qMap
+                ? [...new Set([...qMap.values()].flatMap(s => [...s]))].length
+                : 0;
+              return (
+                <div key={question.id} className="bg-white rounded-2xl p-4" style={{ border: '1px solid #E0E0E6' }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-bold" style={{ color: '#1C1C1E' }}>
+                      <span className="text-teal-600 mr-1">Q{qi + 1}.</span> {question.title}
+                    </p>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#F0F9FF', color: '#0D9488' }}>
+                      {totalSessions} resp.
+                    </span>
+                  </div>
+                  {totalSessions === 0 ? (
+                    <p className="text-xs" style={{ color: '#9A9AA2' }}>Sem dados ainda.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {question.options
+                        .map(opt => ({
+                          ...opt,
+                          count: qMap?.get(opt.value)?.size ?? 0,
+                        }))
+                        .sort((a, b) => b.count - a.count)
+                        .map(opt => {
+                          const pct = totalSessions > 0 ? Math.round((opt.count / totalSessions) * 100) : 0;
+                          return (
+                            <div key={opt.value}>
+                              <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-[11px] font-medium" style={{ color: '#3A3A40' }}>{opt.label}</span>
+                                <span className="text-[11px] font-bold" style={{ color: pct >= 30 ? '#0D9488' : '#7A7A82' }}>
+                                  {pct}% <span style={{ color: '#B0B0B8', fontWeight: 400 }}>({opt.count})</span>
+                                </span>
+                              </div>
+                              <div className="h-2 rounded-full overflow-hidden" style={{ background: '#F2F2F7' }}>
+                                <div
+                                  className="h-full rounded-full"
+                                  style={{
+                                    width: `${pct}%`,
+                                    background: pct >= 50 ? '#0D9488' : pct >= 25 ? '#0891B2' : '#D1D1D6',
+                                    transition: 'width 0.4s ease',
+                                    minWidth: opt.count > 0 ? 4 : 0,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
